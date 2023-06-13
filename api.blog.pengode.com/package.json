@@ -1,0 +1,35 @@
+{
+  "name": "api-blog-pengode-com",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A Strapi application",
+  "scripts": {
+    "develop": "strapi develop",
+    "start": "strapi start",
+    "build": "strapi build",
+    "strapi": "strapi"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "@ckeditor/strapi-plugin-ckeditor": "^0.0.7",
+    "@strapi/plugin-color-picker": "^4.11.0",
+    "@strapi/plugin-documentation": "^4.11.0",
+    "@strapi/plugin-i18n": "4.11.0",
+    "@strapi/plugin-users-permissions": "4.11.0",
+    "@strapi/provider-upload-cloudinary": "^4.11.0",
+    "@strapi/strapi": "4.11.0",
+    "better-sqlite3": "8.0.1",
+    "strapi-plugin-wysiwyg-react-md-editor": "^4.3.0"
+  },
+  "author": {
+    "name": "A Strapi developer"
+  },
+  "strapi": {
+    "uuid": "76860b43-b77d-4884-ab39-9f34710bf7ce"
+  },
+  "engines": {
+    "node": ">=14.19.1 <=18.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT"
+}
