@@ -2,14 +2,13 @@
 
 import ArticleItem from '@pengode/blog/app/(home)/components/article-item'
 import { Input } from '@pengode/blog/components/ui/input'
+import { useToast } from '@pengode/blog/components/ui/use-toast'
 import useSearchArticles from '@pengode/blog/data/hooks/use-search-articles'
 import Article from '@pengode/blog/data/models/article'
 import { Paging } from '@pengode/blog/data/models/paging'
-import { AnimatePresence, useInView } from 'framer-motion'
+import { AnimatePresence, motion, useInView } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { useToast } from '@pengode/blog/components/ui/use-toast'
 
 export interface ArticleListProps {
 	initialArticles: Paging<Article>
@@ -43,7 +42,7 @@ export default function ArticlesList({ initialArticles }: ArticleListProps) {
 				variant: 'destructive',
 			})
 		}
-	}, [isError, error])
+	}, [isError, error, toast])
 
 	return (
 		<div className='w-full'>
