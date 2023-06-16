@@ -51,6 +51,7 @@ const useSearchArticles = (
 		router.replace(
 			pathname + '?' + qs.stringify(debouncedParams, { skipNulls: true })
 		)
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [debouncedParams])
 
 	return {
