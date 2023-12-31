@@ -60,6 +60,7 @@ public class ArticleService {
         article.setThumbnail(request.getThumbnail());
         article.setBody(request.getBody());
         article.setSummary(request.getSummary());
+        article.setReadingTime(request.getReadingTime());
 
         AuthUser authUser = (AuthUser) SecurityContextHolder.getContext()
             .getAuthentication()
@@ -126,6 +127,7 @@ public class ArticleService {
         article.setThumbnail(request.getThumbnail());
         article.setBody(request.getBody());
         article.setSummary(request.getSummary());
+        article.setReadingTime(request.getReadingTime());
 
         List<ArticleCategory> categories = request.getCategoryIds()
             .stream()
@@ -145,7 +147,7 @@ public class ArticleService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article is not found"));
 
         if (article.getStatus().getName() != ArticleStatus.Name.PUBLISHED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot draft article with status" + article.getStatus().getName());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, STR."Cannot draft article with status \{article.getStatus().getName()}");
         }
 
         ArticleStatus status = articleStatusRepository.findByName(ArticleStatus.Name.DRAFT)
@@ -179,7 +181,7 @@ public class ArticleService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article is not found"));
 
         if (article.getStatus().getName() != ArticleStatus.Name.DRAFT) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot schedule article with status" + article.getStatus().getName());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, STR."Cannot schedule article with status \{article.getStatus().getName()}");
         }
 
         ArticleStatus status = articleStatusRepository.findByName(ArticleStatus.Name.SCHEDULED)
@@ -211,7 +213,7 @@ public class ArticleService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article is not found"));
 
         if ((article.getStatus().getName() != ArticleStatus.Name.DRAFT) && (article.getStatus().getName() != ArticleStatus.Name.SCHEDULED)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot publish article with status" + article.getStatus().getName());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, STR."Cannot publish article with status \{article.getStatus().getName()}");
         }
 
         ArticleStatus status = articleStatusRepository.findByName(ArticleStatus.Name.PUBLISHED)
@@ -274,7 +276,7 @@ public class ArticleService {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Article is not found"));
 
         if (article.getStatus().getName() != ArticleStatus.Name.DELETED) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cannot restore article with status" + article.getStatus().getName());
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, STR."Cannot restore article with status \{article.getStatus().getName()}");
         }
 
         ArticleStatus status = articleStatusRepository.findByName(ArticleStatus.Name.DRAFT)

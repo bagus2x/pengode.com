@@ -59,6 +59,9 @@ public class Article implements TimestampAware {
     )
     private String summary;
 
+    @Column(name = "reading_time")
+    private Integer readingTime;
+
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt;
 

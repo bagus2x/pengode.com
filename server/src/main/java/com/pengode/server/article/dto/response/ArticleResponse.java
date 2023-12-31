@@ -20,6 +20,7 @@ public class ArticleResponse {
     private String thumbnail;
     private String body;
     private String summary;
+    private Integer readingTime;
     private StatusResponse status;
     private List<CategoryResponse> categories;
     private LocalDateTime createdAt;
@@ -37,6 +38,7 @@ public class ArticleResponse {
             .thumbnail(article.getThumbnail())
             .body(article.getBody())
             .summary(article.getSummary())
+            .readingTime(article.getReadingTime())
             .status(new StatusResponse(article.getStatus().getId(), article.getStatus().getName().name()))
             .categories(
                 article.getCategories()

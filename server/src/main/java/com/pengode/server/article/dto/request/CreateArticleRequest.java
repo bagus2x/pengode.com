@@ -29,6 +29,8 @@ public class CreateArticleRequest {
     @Size(max = 511)
     private String summary;
 
+    private Integer readingTime;
+
     @NotEmpty
     private List<@Positive Long> categoryIds = new ArrayList<>();
 }
