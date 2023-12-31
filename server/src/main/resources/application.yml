@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api/v1
+spring:
+  application:
+    name: Pengode
+  datasource:
+    url: jdbc:mysql://localhost:3306/pengode
+    username: root
+    password: 
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 15
+  jpa:
+    properties:
+      hibernate:
+        show_sql: true
+        format_sql: true
+    hibernate:
+      ddl-auto: update
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: fc663517cfaab98765c9
+            client-secret: 332f098ce688ede99673c1c3b9702c09cbf51faf
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE
+jwt:
+  access-token:
+    expiration-in-minutes: 1440
+    secret: verySecret0820172107210720172017201721072120172012702
+  refresh-token:
+    expiration-in-minutes: 1440
+    secret: verySecret0820172107210720172017201721072120172012702
+initializer:
+  roles:
+    - USER
+    - ADMIN
+  admins:
+    - username: dutapanggulu
+      password: dutapanggulu
+      email: dutapnggulu@gmail.com
+      name: Duta Panggulu
+    - username: tubagus
+      password: tubagus
+      email: tubagussaifulloh@gmail.com
+      name: Tubagus Saifulloh
