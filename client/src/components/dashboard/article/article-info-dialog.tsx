@@ -1,11 +1,6 @@
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { Button } from '@pengode/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from '@pengode/components/ui/dialog'
+import { Dialog, DialogContent } from '@pengode/components/ui/dialog'
 import { Article } from '@pengode/data/article'
 
 export type ArticleInfoDialogProps = PropsWithClassName & {

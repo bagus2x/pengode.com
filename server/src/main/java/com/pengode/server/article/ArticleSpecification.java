@@ -16,8 +16,8 @@ public class ArticleSpecification {
             }
 
             return cb.or(
-                cb.like(root.get("title"), "%" + search + "%"),
-                cb.like(root.get("summary"), "%" + search + "%")
+                cb.like(root.get("title"), STR."%\{search}%"),
+                cb.like(root.get("summary"), STR."%\{search}%")
             );
         };
     }

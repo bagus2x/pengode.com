@@ -81,6 +81,7 @@ const formSchema = z.object({
     .max(511, {
       message: 'Summary must be less than 511 characters.',
     }),
+  readingTime: z.number().optional(),
   thumbnail: z.instanceof(File).or(z.string()).nullable(),
   categoryIds: z
     .array(z.number().gt(0))
@@ -109,6 +110,7 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
     defaultValues: {
       title: '',
       summary: '',
+      readingTime: 0,
       thumbnail: null,
       body: '',
       categoryIds: [],
@@ -139,8 +141,11 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
         }
       }
 
-      if (editMode && articleId) return await updateArticle(articleId, req)
-      else return await createArticle(req)
+      if (editMode && articleId) {
+        return await updateArticle(articleId, { ...req, thumbnail })
+      }
+
+      return await createArticle(req)
     },
     mutationKey: ['ARTICLE_EDITOR', editMode],
   })
@@ -164,6 +169,7 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
       form.setValue('title', article.title)
       form.setValue('body', article.body)
       form.setValue('summary', article.summary)
+      form.setValue('readingTime', article.readingTime || 0)
       form.setValue('body', article.body)
       const categoryIds = article.categories.map((category) => category.id)
       form.setValue('categoryIds', categoryIds)
@@ -227,6 +233,24 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
                     <FormLabel>Summary</FormLabel>
                     <FormControl>
                       <Textarea placeholder='Summary of post' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='readingTime'
+                render={({ field: { onChange, ...field } }) => (
+                  <FormItem className='mb-4'>
+                    <FormLabel>Reading time in minutes</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='number'
+                        placeholder='Summary of post'
+                        {...field}
+                        onChange={(ev) => onChange(parseInt(ev.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

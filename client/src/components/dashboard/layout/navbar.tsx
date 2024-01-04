@@ -1,28 +1,19 @@
 'use client'
 
 import {
-  CalculatorIcon,
   CalendarIcon,
-  CloudIcon,
-  CreditCardIcon,
-  GithubIcon,
-  KeyboardIcon,
-  LifeBuoyIcon,
   LogOutIcon,
-  MailIcon,
-  MessageSquareIcon,
   MonitorIcon,
   MoonIcon,
-  PlusCircleIcon,
-  PlusIcon,
   SearchIcon,
   SettingsIcon,
-  SmileIcon,
   SunIcon,
   UserIcon,
-  UserPlusIcon,
-  UsersIcon,
 } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { useTheme } from 'next-themes'
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
@@ -35,7 +26,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from '@pengode/components/ui/command'
 import {
   DropdownMenu,
@@ -43,18 +33,10 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuPortal,
   DropdownMenuSeparator,
   DropdownMenuShortcut,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@pengode/components/ui/dropdown-menu'
-import { useSession } from 'next-auth/react'
-import { useTheme } from 'next-themes'
-import Image from 'next/image'
-import { useEffect, useState } from 'react'
 import { signOut } from '@pengode/data/auth'
 
 export function Navbar({ className }: PropsWithClassName) {

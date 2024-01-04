@@ -18,9 +18,10 @@ export interface Article {
     photo: string
   }
   title: string
-  thumbnail: string
+  thumbnail?: string | null
   body: string
   summary: string
+  readingTime?: number | null
   status: {
     id: string
     name: string
@@ -35,6 +36,7 @@ export async function createArticle(req: {
   thumbnail?: string | null
   body: string
   summary: string
+  readingTime?: number | null,
   categoryIds: number[]
 }) {
   return await withAuth(post)<Article>({

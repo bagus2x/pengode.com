@@ -29,7 +29,7 @@ const menus = [
     Icon: HomeIcon,
   },
   {
-    name: 'Blog',
+    name: 'Article',
     href: '/dashboard/article',
     Icon: BlogIcon,
     sub: [
@@ -40,10 +40,6 @@ const menus = [
       {
         name: 'Editor',
         href: '/dashboard/article/editor',
-      },
-      {
-        name: 'Trash',
-        href: '/dashboard/article/trash',
       },
     ],
   },

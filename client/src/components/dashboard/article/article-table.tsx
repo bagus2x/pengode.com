@@ -229,7 +229,7 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
   }
 
   return (
-    <main>
+    <>
       <section className={cn('relative mx-auto max-w-screen-xl', className)}>
         <Card className='py-4'>
           <TableToolbar
@@ -393,6 +393,6 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
         }}
         onSchedule={handleScheduleArticle}
       />
-    </main>
+    </>
   )
 }

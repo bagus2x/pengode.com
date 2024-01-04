@@ -2,6 +2,7 @@ package com.pengode.server.project;
 
 import com.pengode.server.common.jpa.TimestampAware;
 import com.pengode.server.common.jpa.TimestampListener;
+import com.pengode.server.profile.Profile;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -54,13 +55,6 @@ public class Project implements TimestampAware {
     private String body;
 
     @Column(
-        name = "summary",
-        nullable = false,
-        length = 511
-    )
-    private String summary;
-
-    @Column(
         name = "updated_at",
         nullable = false
     )
@@ -71,6 +65,13 @@ public class Project implements TimestampAware {
         nullable = false
     )
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(
+        name = "author_id",
+        nullable = false
+    )
+    private Profile author;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(

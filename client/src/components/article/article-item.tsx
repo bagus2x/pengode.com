@@ -10,11 +10,11 @@ import { PropsWithClassName } from '@pengode/common/types'
 
 export type ArticleItemProps = PropsWithClassName & {
   id: number
-  image: string
+  thumbnail?: string | null
   title: string
-  summary: string
+  summary?: string | null
   categories: string[]
-  readTime: number
+  readingTime?: number | null
   createdAt: Date
 }
 
@@ -22,17 +22,17 @@ dayjs.extend(relativeTime)
 
 export function ArticleItem({
   id,
-  image,
+  thumbnail,
   title,
   summary,
   categories,
-  readTime,
+  readingTime,
   createdAt,
 }: ArticleItemProps) {
   return (
     <div className={cn('flex flex-col gap-4 sm:flex-row')}>
       <Image
-        src={image}
+        src={thumbnail || '/assets/no-image-placeholder.svg'}
         width={160}
         height={160}
         alt={title}
@@ -51,7 +51,7 @@ export function ArticleItem({
           </Link>
         </div>
         <div className='mb-2 text-sm'>
-          {dayjs().to(createdAt)} • {readTime} mins read
+          {dayjs().to(createdAt)} • {readingTime || 0} mins read
         </div>
         <ScrollArea className='whitespace-nowrap'>
           <div className='flex gap-2'>

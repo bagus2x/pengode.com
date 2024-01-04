@@ -24,11 +24,6 @@ public class ArticleController {
         return articleService.create(request);
     }
 
-    @GetMapping("/article1")
-    public PageRequest create(PageRequest request) {
-        return request;
-    }
-
     @GetMapping("/articles")
     @PreAuthorize("(hasRole('ADMIN') and #statusIds.size() != 0) or #statusIds.size() == 0")
     public PageResponse<ArticleResponse> getAll(

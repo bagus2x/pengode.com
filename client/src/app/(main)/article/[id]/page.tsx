@@ -20,7 +20,7 @@ export default async function ArticleDetail({ params }: ProjectDetailProps) {
 
   return (
     <main className='mx-auto flex min-h-screen flex-col p-4 py-16'>
-      <section className='prose mx-auto w-full max-w-screen-xl'>
+      <section className='prose mx-auto mb-4 w-full max-w-screen-xl'>
         <MDXRemote
           options={{
             mdxOptions: {
@@ -33,7 +33,7 @@ export default async function ArticleDetail({ params }: ProjectDetailProps) {
         />
       </section>
       <GoogleOAuthProvider clientId={env('GOOGLE_ID')}>
-       <CommentList />
+        <CommentList className='px-4' />
       </GoogleOAuthProvider>
     </main>
   )
