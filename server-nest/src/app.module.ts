@@ -27,6 +27,7 @@ import { UserModule } from '@pengode/user/user.module'
         database: config.get<string>('DB_NAME'),
         entities: [User, Article, ArticleCategory, ArticleHistory],
         synchronize: true,
+        logging: true,
       }),
     }),
     UserModule,
