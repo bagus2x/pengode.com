@@ -7,7 +7,7 @@ import { env } from '@pengode/common/utils'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
-  app.setGlobalPrefix('/api')
+  app.setGlobalPrefix('/api/v1')
 
   // Swagger
   const config = new DocumentBuilder()
@@ -17,7 +17,7 @@ async function bootstrap() {
     .addTag('pengode')
     .build()
   const document = SwaggerModule.createDocument(app, config)
-  SwaggerModule.setup('api', app, document)
+  SwaggerModule.setup('/api/v1', app, document)
 
   // Validator
   app.useGlobalPipes(new ValidationPipe())
