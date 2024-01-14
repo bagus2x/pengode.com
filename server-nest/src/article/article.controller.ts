@@ -18,7 +18,7 @@ import {
 } from '@pengode/article/article.dto'
 import { ArticleService } from '@pengode/article/article.service'
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
-import { PageRequest, PageResponse } from '@pengode/common/dtos'
+import { PageParam, PageRequest, PageResponse } from '@pengode/common/dtos'
 
 @Controller()
 @ApiTags('Article')
@@ -36,7 +36,9 @@ export class ArticleController {
   @Get('/articles')
   @HttpCode(200)
   @ApiOkResponse({ type: PageResponse<ArticleResponse> })
-  findAll(req: PageRequest): Promise<PageResponse<ArticleResponse>> {
+  findAll(
+    @PageParam() req: PageRequest,
+  ): Promise<PageResponse<ArticleResponse>> {
     return this.articleService.findAll(req)
   }
 
@@ -48,6 +50,7 @@ export class ArticleController {
   }
 
   @Patch('/article/:articleId')
+  @UseGuards(AccessTokenGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   update(
@@ -58,6 +61,7 @@ export class ArticleController {
   }
 
   @Delete('/article/:articleId')
+  @UseGuards(AccessTokenGuard)
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   remove(@Param('articleId') articleId: string): Promise<ArticleResponse> {

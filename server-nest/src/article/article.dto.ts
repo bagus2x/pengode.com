@@ -1,6 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
 import {
-  ArrayNotEmpty,
   ArrayUnique,
   IsArray,
   IsInt,
@@ -43,7 +42,6 @@ export class CreateArticleRequest {
   readingTime?: number | null
 
   @IsArray()
-  @ArrayNotEmpty()
   @ArrayUnique()
   @IsPositive({ each: true })
   @NotEquals(null, { each: true })
@@ -84,7 +82,6 @@ export class UpdateArticleRequest {
   readingTime?: number | null
 
   @IsArray()
-  @ArrayNotEmpty()
   @ArrayUnique()
   @IsPositive({ each: true })
   @IsNumber({}, { each: true })
@@ -98,41 +95,6 @@ export class ScheduleArticleRequest {
   @NotEquals(undefined)
   @ApiProperty()
   time: number
-}
-
-export class ArticleResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  title: string
-
-  @ApiProperty()
-  thumbnail: string | null
-
-  @ApiProperty()
-  body: string
-
-  @ApiProperty()
-  summary: string
-
-  @ApiProperty()
-  readingTime: number | null
-
-  @ApiProperty()
-  status: string
-
-  @ApiProperty()
-  scheduledAt?: Date | null
-
-  @ApiProperty()
-  author: AuthorResponse
-
-  @ApiProperty()
-  categories: CategoryResponse[]
-
-  @ApiProperty()
-  histories: HistoryResponse[]
 }
 
 export class AuthorResponse {
@@ -169,4 +131,39 @@ export class HistoryResponse {
 
   @ApiProperty()
   createdAt: Date
+}
+
+export class ArticleResponse {
+  @ApiProperty()
+  id: number
+
+  @ApiProperty()
+  title: string
+
+  @ApiProperty()
+  thumbnail: string | null
+
+  @ApiProperty()
+  body: string
+
+  @ApiProperty()
+  summary: string
+
+  @ApiProperty()
+  readingTime: number | null
+
+  @ApiProperty()
+  status: string
+
+  @ApiProperty()
+  scheduledAt?: Date | null
+
+  @ApiProperty()
+  author: AuthorResponse
+
+  @ApiProperty()
+  categories: CategoryResponse[]
+
+  @ApiProperty()
+  histories: HistoryResponse[]
 }

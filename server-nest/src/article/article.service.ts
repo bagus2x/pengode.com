@@ -80,11 +80,19 @@ export class ArticleService {
     const articles = await this.articleRepository.find({
       where: { id: LessThan(req.cursor) },
       take: req.size,
+      order: {
+        id: 'DESC',
+      },
+      relations: {
+        author: true,
+        categories: true,
+        histories: true,
+      },
     })
 
     return {
       items: articles.map(this.mapArticleToResponse),
-      nextCursor: articles[articles.length - 1].id || 0,
+      nextCursor: articles[articles.length - 1]?.id || 0,
     }
   }
 
@@ -171,15 +179,17 @@ export class ArticleService {
         name: article.author.name,
         photo: article.author.photo,
       },
-      categories: article.categories.map((category) => ({
-        id: category.id,
-        name: category.name,
-      })),
-      histories: article.histories.map((history) => ({
-        id: history.id,
-        status: history.status,
-        createdAt: history.createdAt,
-      })),
+      categories:
+        article.categories?.map((category) => ({
+          id: category.id,
+          name: category.name,
+        })) || [],
+      histories:
+        article.histories?.map((history) => ({
+          id: history.id,
+          status: history.status,
+          createdAt: history.createdAt,
+        })) || [],
     }
   }
 }
