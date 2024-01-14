@@ -18,7 +18,7 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@pengode/*": ["src/*"]
+      "@pengode/*": ["./src/*"]
     }
   },
   "watchOptions": {
