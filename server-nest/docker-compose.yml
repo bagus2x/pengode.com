@@ -17,6 +17,15 @@ services:
     ports:
       - '5432:5432'
 
+  redis: # Name of container
+      image: redis
+      env_file:
+        - .env
+      ports:
+        - 6379:6379
+      volumes:
+        - ./redis:/data
+
   app:
     build:
       context: .
@@ -28,6 +37,7 @@ services:
       - '${PORT}:${PORT}'
     depends_on:
       - db
+      - redis
     volumes:
       - ./src:/app/src
 
