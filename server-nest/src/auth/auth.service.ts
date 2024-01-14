@@ -106,7 +106,7 @@ export class AuthService {
         },
         {
           secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
-          expiresIn: '15m',
+          expiresIn: '1h',
         },
       ),
       this.jwtService.signAsync(
@@ -137,12 +137,13 @@ export class AuthService {
     const userId = this.authUser.user.userId
     const refreshToken = this.authUser.user.refreshToken
     const user = await this.userRepository.findOneBy({ id: userId })
-    const cachedRefreshToken = await this.cache.get(`${userId}`)
+    const storedToken = await this.cache.get(`${userId}`)
+
     if (
       !user ||
       !refreshToken ||
-      !cachedRefreshToken ||
-      refreshToken !== cachedRefreshToken
+      !storedToken ||
+      refreshToken !== storedToken
     ) {
       throw new ForbiddenException('Access Denied')
     }
@@ -157,7 +158,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.username)
 
-    this.cache.set(`${userId}`, tokens.refreshToken)
+    await this.cache.set(`${userId}`, tokens.refreshToken)
 
     return tokens
   }
