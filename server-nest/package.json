@@ -31,6 +31,7 @@
     "@nestjs/typeorm": "^10.0.1",
     "bcryptjs": "^2.4.3",
     "cache-manager": "^5.3.2",
+    "cache-manager-redis-store": "^3.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "passport": "^0.7.0",
@@ -80,6 +81,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+     "moduleNameMapper": {
+        "^@pengode/(.*)$": ["<rootDir>/$1"]
+    }
   }
 }
