@@ -14,6 +14,7 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import {
   ArticleResponse,
   CreateArticleRequest,
+  ScheduleArticleRequest,
   UpdateArticleRequest,
 } from '@pengode/article/article.dto'
 import { ArticleService } from '@pengode/article/article.service'
@@ -58,6 +59,33 @@ export class ArticleController {
     @Body() req: UpdateArticleRequest,
   ): Promise<ArticleResponse> {
     return this.articleService.update(+articleId, req)
+  }
+
+  @Patch('/article/:articleId/draft')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(200)
+  @ApiOkResponse({ type: ArticleResponse })
+  draft(@Param('articleId') articleId: string): Promise<ArticleResponse> {
+    return this.articleService.draft(+articleId)
+  }
+
+  @Patch('/article/:articleId/publish')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(200)
+  @ApiOkResponse({ type: ArticleResponse })
+  publish(@Param('articleId') articleId: string): Promise<ArticleResponse> {
+    return this.articleService.publish(+articleId)
+  }
+
+  @Patch('/article/:articleId/schedule')
+  @UseGuards(AccessTokenGuard)
+  @HttpCode(200)
+  @ApiOkResponse({ type: ArticleResponse })
+  schedule(
+    @Param('articleId') articleId: string,
+    @Body() req: ScheduleArticleRequest,
+  ): Promise<ArticleResponse> {
+    return this.articleService.schedule(+articleId, req)
   }
 
   @Delete('/article/:articleId')

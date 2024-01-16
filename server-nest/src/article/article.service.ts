@@ -1,5 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common'
+import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectRepository } from '@nestjs/typeorm'
+import { User } from '@pengode/user/user'
+import { CronJob } from 'cron'
 import { DataSource, LessThan, Repository } from 'typeorm'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
@@ -8,11 +15,11 @@ import { Article, Status } from '@pengode/article/article'
 import {
   ArticleResponse,
   CreateArticleRequest,
+  ScheduleArticleRequest,
   UpdateArticleRequest,
 } from '@pengode/article/article.dto'
 import { AuthUser } from '@pengode/auth/utils/auth-user'
 import { PageRequest, PageResponse } from '@pengode/common/dtos'
-import { User } from '@pengode/user/user'
 
 @Injectable()
 export class ArticleService {
@@ -21,6 +28,7 @@ export class ArticleService {
     private readonly authUser: AuthUser,
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
+    private readonly scheduleRegistry: SchedulerRegistry,
   ) {}
 
   async create(req: CreateArticleRequest): Promise<ArticleResponse> {
@@ -63,7 +71,7 @@ export class ArticleService {
           categories,
         })
 
-        articleHistoryRepository.save({
+        await articleHistoryRepository.save({
           editor: author,
           status: Status.DRAFT,
           article,
@@ -83,11 +91,6 @@ export class ArticleService {
       order: {
         id: 'DESC',
       },
-      relations: {
-        author: true,
-        categories: true,
-        histories: true,
-      },
     })
 
     return {
@@ -99,7 +102,6 @@ export class ArticleService {
   async findOne(articleId: number): Promise<ArticleResponse> {
     const article = await this.articleRepository.findOne({
       where: { id: articleId },
-      relations: { author: true, categories: true },
     })
     if (!article) {
       throw new NotFoundException('article is not found')
@@ -148,13 +150,153 @@ export class ArticleService {
     return this.mapArticleToResponse(article)
   }
 
+  async draft(articleId: number) {
+    const article = await this.dataSource.manager.transaction(
+      async (entityManager) => {
+        const articleRepository = entityManager.getRepository(Article)
+        const userRepository = entityManager.getRepository(User)
+        const articleHistoryRepository =
+          entityManager.getRepository(ArticleHistory)
+
+        const article = await articleRepository.findOne({
+          where: { id: articleId },
+        })
+        if (!article) {
+          throw new NotFoundException('article is not found')
+        }
+        if (article.status !== Status.PUBLISHED) {
+          throw new BadRequestException(
+            `Cannot draft article with status ${article.status}`,
+          )
+        }
+        article.status = Status.DRAFT
+
+        const draftedArticle = await articleRepository.save(article)
+
+        const editorId = this.authUser.user.userId
+        const editor = await userRepository.findOneBy({ id: editorId })
+        if (!editor) {
+          throw new NotFoundException('editor is not found')
+        }
+
+        await articleHistoryRepository.save({
+          editor,
+          status: Status.DRAFT,
+          article,
+        })
+
+        return draftedArticle
+      },
+    )
+
+    return this.mapArticleToResponse(article)
+  }
+
+  async schedule(articleId: number, req: ScheduleArticleRequest) {
+    const article = await this.dataSource.manager.transaction(
+      async (entityManager) => {
+        const articleRepository = entityManager.getRepository(Article)
+        const userRepository = entityManager.getRepository(User)
+        const articleHistoryRepository =
+          entityManager.getRepository(ArticleHistory)
+
+        const article = await articleRepository.findOne({
+          where: { id: articleId },
+        })
+        if (!article) {
+          throw new NotFoundException('article is not found')
+        }
+        if (
+          article.status !== Status.DRAFT &&
+          article.status !== Status.SCHEDULED
+        ) {
+          throw new BadRequestException(
+            `Cannot schedule article with status ${article.status}`,
+          )
+        }
+
+        article.status = Status.SCHEDULED
+        article.scheduledAt = new Date(req.time)
+
+        const scheduledArticle = await articleRepository.save(article)
+
+        const editorId = this.authUser.user.userId
+        const editor = await userRepository.findOneBy({ id: editorId })
+        if (!editor) {
+          throw new NotFoundException('editor is not found')
+        }
+
+        await articleHistoryRepository.save({
+          editor,
+          status: Status.SCHEDULED,
+          article,
+        })
+
+        const job = new CronJob(new Date(req.time), async () => {
+          await this.publish(articleId)
+        })
+
+        this.scheduleRegistry.deleteCronJob(`${articleId}`)
+        this.scheduleRegistry.addCronJob(`${articleId}`, job)
+        job.start()
+
+        return scheduledArticle
+      },
+    )
+
+    return this.mapArticleToResponse(article)
+  }
+
+  async publish(articleId: number): Promise<ArticleResponse> {
+    const article = await this.dataSource.manager.transaction(
+      async (entityManager) => {
+        const articleRepository = entityManager.getRepository(Article)
+        const userRepository = entityManager.getRepository(User)
+        const articleHistoryRepository =
+          entityManager.getRepository(ArticleHistory)
+
+        const article = await articleRepository.findOne({
+          where: { id: articleId },
+        })
+        if (!article) {
+          throw new NotFoundException('article is not found')
+        }
+        if (
+          article.status !== Status.DRAFT &&
+          article.status !== Status.SCHEDULED
+        ) {
+          throw new BadRequestException(
+            `Cannot publish article with status ${article.status}`,
+          )
+        }
+
+        console.log('HELLO')
+        article.status = Status.PUBLISHED
+
+        const publishedArticle = await articleRepository.save(article)
+
+        const editorId = this.authUser.user.userId
+        const editor = await userRepository.findOneBy({ id: editorId })
+        if (!editor) {
+          throw new NotFoundException('editor is not found')
+        }
+
+        await articleHistoryRepository.save({
+          editor,
+          status: Status.PUBLISHED,
+          article,
+        })
+
+        return publishedArticle
+      },
+    )
+
+    return this.mapArticleToResponse(article)
+  }
+
   async remove(articleId: number): Promise<ArticleResponse> {
     const article = await this.articleRepository.findOne({
       where: { id: articleId },
-      relations: {
-        author: true,
-        categories: true,
-      },
     })
 
     await this.articleRepository.remove(article)

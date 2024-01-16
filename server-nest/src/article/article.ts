@@ -53,11 +53,11 @@ export class Article {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { eager: true })
   @JoinColumn([{ name: 'author_id', referencedColumnName: 'id' }])
   author: User
 
-  @ManyToMany(() => ArticleCategory)
+  @ManyToMany(() => ArticleCategory, { eager: true })
   @JoinTable({
     name: 'tr_article_category',
     joinColumn: {
@@ -71,6 +71,8 @@ export class Article {
   })
   categories: ArticleCategory[]
 
-  @OneToMany(() => ArticleHistory, (history) => history.article)
+  @OneToMany(() => ArticleHistory, (history) => history.article, {
+    eager: true,
+  })
   histories: ArticleHistory[]
 }
