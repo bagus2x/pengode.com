@@ -46,23 +46,17 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(req.password, 10)
-    const roles = await Promise.all(
-      ['USER'].map(async (roleName) => {
-        const role = await this.roleRepository.findOneBy({ name: roleName })
-        if (!role) {
-          throw new NotFoundException(`role ${roleName} is not found`)
-        }
-
-        return role
-      }),
-    )
+    const role = await this.roleRepository.findOneBy({ name: 'USER' })
+    if (!role) {
+      throw new NotFoundException(`role user is not found`)
+    }
 
     const newUser = await this.userRepository.save({
       email: req.email,
       username: req.username,
       name: req.name,
       password: hashedPassword,
-      roles,
+      roles: [role],
     })
 
     const tokens = await this.getTokens(newUser.id, newUser.username)
