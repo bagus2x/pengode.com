@@ -11,6 +11,6 @@ export class UserController {
   @Get('/users')
   @Header('Content-Type', 'application/json')
   getUsers() {
-    return this.userService.getUsers()
+    return this.userService.findAll()
   }
 }
