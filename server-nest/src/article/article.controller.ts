@@ -19,6 +19,7 @@ import {
 } from '@pengode/article/article.dto'
 import { ArticleService } from '@pengode/article/article.service'
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
+import { EveryRolesGuard } from '@pengode/auth/utils/roles-guard'
 import { PageParam, PageRequest, PageResponse } from '@pengode/common/dtos'
 
 @Controller()
@@ -35,6 +36,7 @@ export class ArticleController {
   }
 
   @Get('/articles')
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('USER'))
   @HttpCode(200)
   @ApiOkResponse({ type: PageResponse<ArticleResponse> })
   findAll(

@@ -13,10 +13,11 @@ import {
   RefreshTokenStrategy,
 } from '@pengode/auth/utils/token-strategy'
 import { User } from '@pengode/user/user'
+import { Role } from '@pengode/role/role'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Role]),
     JwtModule.register({}),
     CacheModule.register({
       isGlobal: true,

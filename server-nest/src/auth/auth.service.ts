@@ -21,12 +21,15 @@ import {
 } from '@pengode/auth/auth.dto'
 import { AuthUser } from '@pengode/auth/utils/auth-user'
 import { User } from '@pengode/user/user'
+import { Role } from '@pengode/role/role'
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER)
@@ -43,12 +46,23 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(req.password, 10)
+    const roles = await Promise.all(
+      ['USER'].map(async (roleName) => {
+        const role = await this.roleRepository.findOneBy({ name: roleName })
+        if (!role) {
+          throw new NotFoundException(`role ${roleName} is not found`)
+        }
+
+        return role
+      }),
+    )
 
     const newUser = await this.userRepository.save({
       email: req.email,
       username: req.username,
       name: req.name,
       password: hashedPassword,
+      roles,
     })
 
     const tokens = await this.getTokens(newUser.id, newUser.username)

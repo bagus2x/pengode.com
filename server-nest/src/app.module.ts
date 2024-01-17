@@ -9,8 +9,10 @@ import { ArticleHistoryModule } from '@pengode/article-history/article-history.m
 import { Article } from '@pengode/article/article'
 import { ArticleModule } from '@pengode/article/article.module'
 import { AuthModule } from '@pengode/auth/auth.module'
+import { Role } from '@pengode/role/role'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
+import { RoleModule } from './role/role.module'
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { UserModule } from '@pengode/user/user.module'
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Article, ArticleCategory, ArticleHistory],
+        entities: [User, Role, Article, ArticleCategory, ArticleHistory],
         synchronize: true,
         logging: true,
       }),
@@ -35,6 +37,7 @@ import { UserModule } from '@pengode/user/user.module'
     ArticleModule,
     ArticleHistoryModule,
     ArticleCategoryModule,
+    RoleModule,
   ],
 })
 export class AppModule {}
