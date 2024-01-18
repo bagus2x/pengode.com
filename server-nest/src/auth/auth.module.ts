@@ -1,10 +1,8 @@
-import { CacheModule } from '@nestjs/cache-manager'
 import { ConflictException, Module, OnModuleInit } from '@nestjs/common'
-import { ConfigModule, ConfigService } from '@nestjs/config'
+import { ConfigService } from '@nestjs/config'
 import { JwtModule } from '@nestjs/jwt'
 import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
 import * as bcrypt from 'bcryptjs'
-import { redisStore } from 'cache-manager-redis-store'
 import { Repository } from 'typeorm'
 
 import { AuthController } from '@pengode/auth/auth.controller'
@@ -17,26 +15,7 @@ import { Role } from '@pengode/role/role'
 import { User } from '@pengode/user/user'
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User, Role]),
-    JwtModule.register({}),
-    CacheModule.register({
-      isGlobal: true,
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => {
-        const store = await redisStore({
-          socket: {
-            host: configService.get<string>('REDIS_HOST'),
-            port: parseInt(configService.get<string>('REDIS_PORT')!),
-          },
-        })
-        return {
-          store: () => store,
-        }
-      },
-      inject: [ConfigService],
-    }),
-  ],
+  imports: [TypeOrmModule.forFeature([User, Role]), JwtModule.register({})],
   providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
   controllers: [AuthController],
 })
