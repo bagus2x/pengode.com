@@ -1,4 +1,5 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common'
+import { IsNumber, ValidateNested } from 'class-validator'
 
 export class PageResponse<T> {
   items: T[]
@@ -6,8 +7,13 @@ export class PageResponse<T> {
 }
 
 export class PageRequest<T = unknown> {
+  @IsNumber()
   size: number = 10
-  cursor: number = Number.MAX_VALUE
+
+  @IsNumber()
+  cursor: number = Math.pow(2, 31) - 1
+
+  @ValidateNested({ each: true })
   filter?: T
 }
 

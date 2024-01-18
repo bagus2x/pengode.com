@@ -1,7 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { Transform, Type } from 'class-transformer'
 import {
   ArrayUnique,
   IsArray,
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -11,6 +13,9 @@ import {
   MaxLength,
   NotEquals,
 } from 'class-validator'
+
+import { Status } from '@pengode/article/article'
+import { PageRequest } from '@pengode/common/dtos'
 
 export class CreateArticleRequest {
   @IsString()
@@ -81,6 +86,7 @@ export class UpdateArticleRequest {
   @ApiProperty()
   readingTime?: number | null
 
+  @Type(() => Number)
   @IsArray()
   @ArrayUnique()
   @IsPositive({ each: true })
@@ -166,4 +172,17 @@ export class ArticleResponse {
 
   @ApiProperty()
   histories: HistoryResponse[]
+}
+
+export class FindAllRequest extends PageRequest {
+  @IsOptional()
+  @ApiProperty()
+  search?: string
+
+  @IsArray()
+  @IsOptional()
+  @IsEnum(Status, { each: true })
+  @Transform(({ value }) => (typeof value === 'string' ? [value] : value))
+  @ApiProperty()
+  statuses?: Status[]
 }

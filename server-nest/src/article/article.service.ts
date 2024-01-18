@@ -5,9 +5,8 @@ import {
 } from '@nestjs/common'
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectRepository } from '@nestjs/typeorm'
-import { User } from '@pengode/user/user'
 import { CronJob } from 'cron'
-import { DataSource, LessThan, Repository } from 'typeorm'
+import { DataSource, In, LessThan, Repository } from 'typeorm'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
 import { ArticleHistory } from '@pengode/article-history/article-history'
@@ -15,11 +14,13 @@ import { Article, Status } from '@pengode/article/article'
 import {
   ArticleResponse,
   CreateArticleRequest,
+  FindAllRequest,
   ScheduleArticleRequest,
   UpdateArticleRequest,
 } from '@pengode/article/article.dto'
 import { AuthUser } from '@pengode/auth/utils/auth-user'
-import { PageRequest, PageResponse } from '@pengode/common/dtos'
+import { PageResponse } from '@pengode/common/dtos'
+import { User } from '@pengode/user/user'
 
 @Injectable()
 export class ArticleService {
@@ -84,9 +85,12 @@ export class ArticleService {
     return this.mapArticleToResponse(article)
   }
 
-  async findAll(req: PageRequest): Promise<PageResponse<ArticleResponse>> {
+  async findAll(req: FindAllRequest): Promise<PageResponse<ArticleResponse>> {
     const articles = await this.articleRepository.find({
-      where: { id: LessThan(req.cursor) },
+      where: {
+        id: LessThan(req.cursor),
+        status: req.statuses ? In(req.statuses) : undefined,
+      },
       take: req.size,
       order: {
         id: 'DESC',
@@ -99,7 +103,7 @@ export class ArticleService {
     }
   }
 
-  async findOne(articleId: number): Promise<ArticleResponse> {
+  async findById(articleId: number): Promise<ArticleResponse> {
     const article = await this.articleRepository.findOne({
       where: { id: articleId },
     })

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
@@ -14,13 +15,14 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
 import {
   ArticleResponse,
   CreateArticleRequest,
+  FindAllRequest,
   ScheduleArticleRequest,
   UpdateArticleRequest,
 } from '@pengode/article/article.dto'
 import { ArticleService } from '@pengode/article/article.service'
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
 import { EveryRolesGuard } from '@pengode/auth/utils/roles-guard'
-import { PageParam, PageRequest, PageResponse } from '@pengode/common/dtos'
+import { PageResponse } from '@pengode/common/dtos'
 
 @Controller()
 @ApiTags('Article')
@@ -28,7 +30,7 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Post('/article')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(201)
   @ApiCreatedResponse({ type: ArticleResponse })
   create(@Body() req: CreateArticleRequest): Promise<ArticleResponse> {
@@ -36,11 +38,10 @@ export class ArticleController {
   }
 
   @Get('/articles')
-  @UseGuards(AccessTokenGuard, EveryRolesGuard('USER'))
   @HttpCode(200)
   @ApiOkResponse({ type: PageResponse<ArticleResponse> })
   findAll(
-    @PageParam() req: PageRequest,
+    @Query() req: FindAllRequest,
   ): Promise<PageResponse<ArticleResponse>> {
     return this.articleService.findAll(req)
   }
@@ -48,8 +49,8 @@ export class ArticleController {
   @Get('/article/:articleId')
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
-  findOne(@Param('articleId') articleId: string): Promise<ArticleResponse> {
-    return this.articleService.findOne(+articleId)
+  findById(@Param('articleId') articleId: string): Promise<ArticleResponse> {
+    return this.articleService.findById(+articleId)
   }
 
   @Patch('/article/:articleId')
