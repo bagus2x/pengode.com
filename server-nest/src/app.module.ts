@@ -1,6 +1,10 @@
+import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager'
 import { Global, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { APP_INTERCEPTOR } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm'
+import { redisStore } from 'cache-manager-redis-store'
+import { ClsModule } from 'nestjs-cls'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
 import { ArticleCategoryModule } from '@pengode/article-category/article-category.module'
@@ -10,10 +14,9 @@ import { Article } from '@pengode/article/article'
 import { ArticleModule } from '@pengode/article/article.module'
 import { AuthModule } from '@pengode/auth/auth.module'
 import { Role } from '@pengode/role/role'
+import { RoleModule } from '@pengode/role/role.module'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
-import { RoleModule } from './role/role.module'
-import { ClsModule } from 'nestjs-cls'
 
 @Global()
 @Module({
@@ -47,12 +50,34 @@ import { ClsModule } from 'nestjs-cls'
         },
       },
     }),
+    CacheModule.register({
+      isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => {
+        const store = await redisStore({
+          socket: {
+            host: configService.get<string>('REDIS_HOST'),
+            port: parseInt(configService.get<string>('REDIS_PORT')!),
+          },
+        })
+        return {
+          store: () => store,
+        }
+      },
+      inject: [ConfigService],
+    }),
     UserModule,
     AuthModule,
     ArticleModule,
     ArticleHistoryModule,
     ArticleCategoryModule,
     RoleModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
   ],
 })
 export class AppModule {}
