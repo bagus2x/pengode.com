@@ -1,19 +1,20 @@
 import { CacheModule } from '@nestjs/cache-manager'
-import { Module } from '@nestjs/common'
-import { JwtModule } from '@nestjs/jwt'
-import { TypeOrmModule } from '@nestjs/typeorm'
+import { ConflictException, Module, OnModuleInit } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
+import { JwtModule } from '@nestjs/jwt'
+import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm'
+import * as bcrypt from 'bcryptjs'
 import { redisStore } from 'cache-manager-redis-store'
+import { Repository } from 'typeorm'
 
 import { AuthController } from '@pengode/auth/auth.controller'
 import { AuthService } from '@pengode/auth/auth.service'
-import { AuthUser } from '@pengode/auth/utils/auth-user'
 import {
   AccessTokenStrategy,
   RefreshTokenStrategy,
 } from '@pengode/auth/utils/token-strategy'
-import { User } from '@pengode/user/user'
 import { Role } from '@pengode/role/role'
+import { User } from '@pengode/user/user'
 
 @Module({
   imports: [
@@ -36,7 +37,45 @@ import { Role } from '@pengode/role/role'
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthUser, AuthService, AccessTokenStrategy, RefreshTokenStrategy],
+  providers: [AuthService, AccessTokenStrategy, RefreshTokenStrategy],
   controllers: [AuthController],
 })
-export class AuthModule {}
+export class AuthModule implements OnModuleInit {
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Role)
+    private readonly roleRepository: Repository<Role>,
+  ) {}
+
+  async onModuleInit() {
+    try {
+      const email = this.configService.get<string>('ADMIN_EMAIL')
+      const username = this.configService.get<string>('ADMIN_USERNAME')
+      const password = this.configService.get<string>('ADMIN_PASSWORD')
+
+      const exists = await this.userRepository.existsBy({ username })
+      if (exists) return
+
+      const roles = await Promise.all(
+        Role.ROLES.map(async (roleName) => {
+          return await this.roleRepository.findOneByOrFail({ name: roleName })
+        }),
+      )
+      const user = await this.userRepository.save({
+        email,
+        username,
+        password: await bcrypt.hash(password, 10),
+        name: username,
+        roles,
+      })
+
+      console.log(`initial admin ${user.username} has been created`)
+    } catch (error) {
+      if (!(error instanceof ConflictException)) {
+        throw error
+      }
+    }
+  }
+}
