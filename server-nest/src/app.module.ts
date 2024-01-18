@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common'
+import { Global, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
@@ -13,7 +13,9 @@ import { Role } from '@pengode/role/role'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
 import { RoleModule } from './role/role.module'
+import { ClsModule } from 'nestjs-cls'
 
+@Global()
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,6 +33,19 @@ import { RoleModule } from './role/role.module'
         synchronize: true,
         logging: true,
       }),
+    }),
+    ClsModule.forRoot({
+      global: true,
+      middleware: {
+        // automatically mount the
+        // ClsMiddleware for all routes
+        mount: true,
+        // and use the setup method to
+        // provide default store values.
+        setup: (cls, req) => {
+          cls.set('userId', req.headers['x-user-id'])
+        },
+      },
     }),
     UserModule,
     AuthModule,

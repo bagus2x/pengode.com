@@ -2,14 +2,11 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   HttpCode,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common'
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
-import { Request } from 'express'
 
 import {
   AuthResponse,
@@ -24,12 +21,6 @@ import { RefreshTokenGuard } from '@pengode/auth/utils/refresh-token-guard'
 @ApiTags('Authentication')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
-
-  @Get('/')
-  @UseGuards(AccessTokenGuard)
-  current(@Req() request: Request) {
-    return request.user
-  }
 
   @Post('/signup')
   @HttpCode(201)

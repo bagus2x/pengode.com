@@ -19,9 +19,9 @@ import {
   SignInRequest,
   SignUpRequest,
 } from '@pengode/auth/auth.dto'
-import { AuthUser } from '@pengode/auth/utils/auth-user'
-import { User } from '@pengode/user/user'
 import { Role } from '@pengode/role/role'
+import { User } from '@pengode/user/user'
+import { ClsService } from 'nestjs-cls'
 
 @Injectable()
 export class AuthService {
@@ -34,7 +34,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     @Inject(CACHE_MANAGER)
     private readonly cache: Cache,
-    private readonly authUser: AuthUser,
+    private readonly clsService: ClsService,
   ) {}
 
   async signUp(req: SignUpRequest): Promise<AuthResponse> {
@@ -137,13 +137,13 @@ export class AuthService {
   }
 
   async signOut(): Promise<void> {
-    const userId = this.authUser.user.sub
-    await this.cache.del(userId)
+    const userId = this.clsService.get<number>('userId')
+    await this.cache.del(`${userId}`)
   }
 
   async refreshTokens() {
-    const userId = this.authUser.user.userId
-    const refreshToken = this.authUser.user.refreshToken
+    const userId = this.clsService.get<number>('userId')
+    const refreshToken = this.clsService.get<string>('refreshToken')
     const user = await this.userRepository.findOneBy({ id: userId })
     const storedToken = await this.cache.get(`${userId}`)
 
@@ -153,7 +153,7 @@ export class AuthService {
       !storedToken ||
       refreshToken !== storedToken
     ) {
-      throw new ForbiddenException('Access Denied')
+      throw new ForbiddenException('access Denied')
     }
 
     const refreshTokenMatches = await this.jwtService.verifyAsync(
@@ -166,7 +166,8 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.username)
 
-    await this.cache.set(`${userId}`, tokens.refreshToken)
+    const ttl = 7 * 24 * 60 * 60 * 1000
+    await this.cache.set(`${userId}`, tokens.refreshToken, ttl)
 
     return tokens
   }

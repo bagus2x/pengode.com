@@ -6,22 +6,33 @@ import {
   mixin,
 } from '@nestjs/common'
 import { DataSource } from 'typeorm'
+import { FastifyRequest } from 'fastify'
 
 import { User } from '@pengode/user/user'
-import { Request } from 'express'
+import { JwtPayload } from '@pengode/auth/utils/token-strategy'
+import { ClsService } from 'nestjs-cls'
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    user: JwtPayload
+  }
+}
 
 export const SomeRolesGuard = (...roles: string[]): Type<CanActivate> => {
   class RolesGuardMixin {
-    constructor(@Inject(DataSource) private readonly dataSource: DataSource) {}
+    constructor(
+      @Inject(DataSource) private readonly dataSource: DataSource,
+      private readonly clsService: ClsService,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const { user: userFromPayload } = context
         .switchToHttp()
-        .getRequest<Request>()
+        .getRequest<FastifyRequest>()
       if (!userFromPayload) return !!userFromPayload
 
       const user = await this.dataSource.manager.findOne(User, {
-        where: { id: userFromPayload.userId },
+        where: { id: this.clsService.get<number>('userId') },
       })
 
       return user.roles.some((role) => {
@@ -35,16 +46,19 @@ export const SomeRolesGuard = (...roles: string[]): Type<CanActivate> => {
 
 export const EveryRolesGuard = (...roles: string[]): Type<CanActivate> => {
   class RolesGuardMixin {
-    constructor(@Inject(DataSource) private readonly dataSource: DataSource) {}
+    constructor(
+      @Inject(DataSource) private readonly dataSource: DataSource,
+      private readonly clsService: ClsService,
+    ) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const { user: userFromPayload } = context
         .switchToHttp()
-        .getRequest<Request>()
+        .getRequest<FastifyRequest>()
       if (!userFromPayload) return !!userFromPayload
 
       const user = await this.dataSource.manager.findOne(User, {
-        where: { id: userFromPayload.userId },
+        where: { id: this.clsService.get<number>('userId') },
       })
 
       return roles.every((roleName) => {

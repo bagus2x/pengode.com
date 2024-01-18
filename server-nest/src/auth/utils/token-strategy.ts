@@ -1,19 +1,21 @@
 import { Injectable } from '@nestjs/common'
 import { PassportStrategy } from '@nestjs/passport'
-import { Request } from 'express'
+import { FastifyRequest } from 'fastify'
 import { ExtractJwt, Strategy } from 'passport-jwt'
 
 import { env } from '@pengode/common/utils'
+import { ClsService } from 'nestjs-cls'
 
-type JwtPayload = {
+export type JwtPayload = {
   userId: number
   sub: string
   username: string
+  refreshToken?: string
 }
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor() {
+  constructor(private readonly clsService: ClsService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: env('JWT_ACCESS_SECRET'),
@@ -21,6 +23,7 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
   }
 
   validate(payload: JwtPayload) {
+    this.clsService.set('userId', payload.userId)
     return payload
   }
 }
@@ -30,7 +33,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor() {
+  constructor(private readonly clsService: ClsService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: env('JWT_REFRESH_SECRET'),
@@ -38,8 +41,11 @@ export class RefreshTokenStrategy extends PassportStrategy(
     })
   }
 
-  validate(req: Request, payload: any) {
-    const refreshToken = req.get('Authorization').replace('Bearer', '').trim()
-    return { ...payload, refreshToken }
+  validate(req: FastifyRequest, payload: JwtPayload) {
+    const refreshToken = req.headers.authorization.replace('Bearer', '').trim()
+    this.clsService.set('userId', payload.userId)
+    this.clsService.set('refreshToken', refreshToken)
+
+    return payload
   }
 }

@@ -1,12 +1,19 @@
 import { ValidationPipe } from '@nestjs/common'
 import { NestFactory } from '@nestjs/core'
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
 
 import { AppModule } from '@pengode/app.module'
 import { env } from '@pengode/common/utils'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+  )
   app.setGlobalPrefix('/api/v1')
 
   // Swagger
@@ -23,7 +30,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true }))
 
   const port = env('PORT')
-  await app.listen(port, () => `Server is listening to port ${port}`)
+  await app.listen(port, '0.0.0.0')
 }
 
 bootstrap()

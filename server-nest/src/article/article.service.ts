@@ -18,18 +18,18 @@ import {
   ScheduleArticleRequest,
   UpdateArticleRequest,
 } from '@pengode/article/article.dto'
-import { AuthUser } from '@pengode/auth/utils/auth-user'
 import { PageResponse } from '@pengode/common/dtos'
 import { User } from '@pengode/user/user'
+import { ClsService } from 'nestjs-cls'
 
 @Injectable()
 export class ArticleService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly authUser: AuthUser,
     @InjectRepository(Article)
     private readonly articleRepository: Repository<Article>,
     private readonly scheduleRegistry: SchedulerRegistry,
+    private readonly clsService: ClsService,
   ) {}
 
   async create(req: CreateArticleRequest): Promise<ArticleResponse> {
@@ -42,7 +42,7 @@ export class ArticleService {
         const articleCategoryRepository =
           entityManager.getRepository(ArticleCategory)
 
-        const authorId = this.authUser.user.userId
+        const authorId = this.clsService.get('userId')
         const author = await userRepository.findOneBy({ id: authorId })
         if (!author) {
           throw new NotFoundException('author is not found')
@@ -177,7 +177,7 @@ export class ArticleService {
 
         const draftedArticle = await articleRepository.save(article)
 
-        const editorId = this.authUser.user.userId
+        const editorId = this.clsService.get('userId')
         const editor = await userRepository.findOneBy({ id: editorId })
         if (!editor) {
           throw new NotFoundException('editor is not found')
@@ -224,7 +224,7 @@ export class ArticleService {
 
         const scheduledArticle = await articleRepository.save(article)
 
-        const editorId = this.authUser.user.userId
+        const editorId = this.clsService.get('userId')
         const editor = await userRepository.findOneBy({ id: editorId })
         if (!editor) {
           throw new NotFoundException('editor is not found')
@@ -279,7 +279,7 @@ export class ArticleService {
 
         const publishedArticle = await articleRepository.save(article)
 
-        const editorId = this.authUser.user.userId
+        const editorId = this.clsService.get('userId')
         const editor = await userRepository.findOneBy({ id: editorId })
         if (!editor) {
           throw new NotFoundException('editor is not found')
