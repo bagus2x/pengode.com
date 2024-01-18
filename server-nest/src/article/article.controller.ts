@@ -54,7 +54,7 @@ export class ArticleController {
   }
 
   @Patch('/article/:articleId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   update(
@@ -65,7 +65,7 @@ export class ArticleController {
   }
 
   @Patch('/article/:articleId/draft')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   draft(@Param('articleId') articleId: string): Promise<ArticleResponse> {
@@ -73,7 +73,7 @@ export class ArticleController {
   }
 
   @Patch('/article/:articleId/publish')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   publish(@Param('articleId') articleId: string): Promise<ArticleResponse> {
@@ -81,7 +81,7 @@ export class ArticleController {
   }
 
   @Patch('/article/:articleId/schedule')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   schedule(
@@ -92,7 +92,7 @@ export class ArticleController {
   }
 
   @Delete('/article/:articleId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
   @HttpCode(200)
   @ApiOkResponse({ type: ArticleResponse })
   remove(@Param('articleId') articleId: string): Promise<ArticleResponse> {
