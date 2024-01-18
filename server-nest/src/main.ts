@@ -20,7 +20,7 @@ async function bootstrap() {
   SwaggerModule.setup('/api/v1', app, document)
 
   // Validator
-  app.useGlobalPipes(new ValidationPipe())
+  app.useGlobalPipes(new ValidationPipe({ transform: true }))
 
   const port = env('PORT')
   await app.listen(port, () => `Server is listening to port ${port}`)
