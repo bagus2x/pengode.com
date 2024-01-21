@@ -12,6 +12,7 @@ import {
   AuthResponse,
   SignInRequest,
   SignUpRequest,
+  SocialRequest,
 } from '@pengode/auth/auth.dto'
 import { AuthService } from '@pengode/auth/auth.service'
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
@@ -35,10 +36,22 @@ export class AuthController {
     return this.authService.signIn(req)
   }
 
+  @Post('/github')
+  @ApiOkResponse({ type: AuthResponse })
+  github(@Body() req: SocialRequest): Promise<AuthResponse> {
+    return this.authService.github(req)
+  }
+
+  @Post('/google')
+  @ApiOkResponse({ type: AuthResponse })
+  google(@Body() req: SocialRequest): Promise<AuthResponse> {
+    return this.authService.google(req)
+  }
+
   @Post('/refresh-token')
   @UseGuards(RefreshTokenGuard)
   @ApiOkResponse({ type: AuthResponse })
-  refresh() {
+  refresh(): Promise<AuthResponse> {
     return this.authService.refreshTokens()
   }
 

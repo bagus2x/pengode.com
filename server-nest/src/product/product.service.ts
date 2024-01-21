@@ -1,7 +1,7 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import Decimal from 'decimal.js'
-import { DataSource, In, LessThan, Raw, Repository } from 'typeorm'
+import { DataSource, In, LessThan, MoreThan, Raw, Repository } from 'typeorm'
 
 import { ProductCategory } from '@pengode/product-category/product-category'
 import { Product, Status } from '@pengode/product/product'
@@ -64,7 +64,9 @@ export class ProductService {
   async findAll(req: FindAllRequest): Promise<PageResponse<ProductResponse>> {
     const products = await this.productRepository.find({
       where: {
-        id: LessThan(req.cursor),
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
         status: req.statuses ? In(req.statuses) : undefined,
         title: req.search
           ? Raw((alias) => `LOWER(${alias}) LIKE '%${req.search}%'`)
@@ -78,6 +80,7 @@ export class ProductService {
 
     return {
       items: products.map(ProductResponse.create),
+      previousCursor: products[0]?.id || 0,
       nextCursor: products[products.length - 1]?.id || 0,
     }
   }

@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
+import { LessThan, MoreThan, Repository } from 'typeorm'
+
 import { PageResponse } from '@pengode/common/dtos'
 import { ProductCategory } from '@pengode/product-category/product-category'
 import {
+  CategoryResponse,
   CreateCategoryRequest,
   FindAllRequest,
-  CategoryResponse,
 } from '@pengode/product-category/product-category.dto'
-import { LessThan, Repository } from 'typeorm'
 
 @Injectable()
 export class ProductCategoryService {
@@ -27,7 +28,9 @@ export class ProductCategoryService {
   async findAll(req: FindAllRequest): Promise<PageResponse<CategoryResponse>> {
     const categories = await this.productCategoryRepository.find({
       where: {
-        id: LessThan(req.cursor),
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
       },
       take: req.size,
       order: {
@@ -37,6 +40,7 @@ export class ProductCategoryService {
 
     return {
       items: categories.map(CategoryResponse.create),
+      previousCursor: categories[0]?.id,
       nextCursor: categories[categories.length - 1]?.id || 0,
     }
   }

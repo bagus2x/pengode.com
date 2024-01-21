@@ -6,7 +6,7 @@ import {
 import { SchedulerRegistry } from '@nestjs/schedule'
 import { InjectRepository } from '@nestjs/typeorm'
 import { CronJob } from 'cron'
-import { DataSource, In, LessThan, Repository } from 'typeorm'
+import { DataSource, In, LessThan, MoreThan, Raw, Repository } from 'typeorm'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
 import { ArticleHistory } from '@pengode/article-history/article-history'
@@ -82,13 +82,18 @@ export class ArticleService {
       },
     )
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async findAll(req: FindAllRequest): Promise<PageResponse<ArticleResponse>> {
     const articles = await this.articleRepository.find({
       where: {
-        id: LessThan(req.cursor),
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
+        title: req.search
+          ? Raw((alias) => `LOWER(${alias}) LIKE '%${req.search}%'`)
+          : undefined,
         status: req.statuses ? In(req.statuses) : undefined,
       },
       take: req.size,
@@ -98,7 +103,8 @@ export class ArticleService {
     })
 
     return {
-      items: articles.map(this.mapArticleToResponse),
+      items: articles.map(ArticleResponse.create),
+      previousCursor: articles[0]?.id || 0,
       nextCursor: articles[articles.length - 1]?.id || 0,
     }
   }
@@ -111,7 +117,7 @@ export class ArticleService {
       throw new NotFoundException('article is not found')
     }
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async update(
@@ -151,7 +157,7 @@ export class ArticleService {
       },
     )
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async draft(articleId: number) {
@@ -193,7 +199,7 @@ export class ArticleService {
       },
     )
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async schedule(articleId: number, req: ScheduleArticleRequest) {
@@ -248,7 +254,7 @@ export class ArticleService {
       },
     )
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async publish(articleId: number): Promise<ArticleResponse> {
@@ -295,7 +301,7 @@ export class ArticleService {
       },
     )
 
-    return this.mapArticleToResponse(article)
+    return ArticleResponse.create(article)
   }
 
   async remove(articleId: number): Promise<ArticleResponse> {
@@ -305,37 +311,6 @@ export class ArticleService {
 
     await this.articleRepository.remove(article)
 
-    return this.mapArticleToResponse(article)
-  }
-
-  private mapArticleToResponse(article: Article): ArticleResponse {
-    return {
-      id: article.id,
-      title: article.title,
-      thumbnail: article.thumbnail,
-      body: article.body,
-      summary: article.summary,
-      readingTime: article.readingTime,
-      status: article.status,
-      scheduledAt: article.scheduledAt,
-      author: {
-        id: article.author.id,
-        email: article.author.email,
-        username: article.author.username,
-        name: article.author.name,
-        photo: article.author.photo,
-      },
-      categories:
-        article.categories?.map((category) => ({
-          id: category.id,
-          name: category.name,
-        })) || [],
-      histories:
-        article.histories?.map((history) => ({
-          id: history.id,
-          status: history.status,
-          createdAt: history.createdAt,
-        })) || [],
-    }
+    return ArticleResponse.create(article)
   }
 }

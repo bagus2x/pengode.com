@@ -14,7 +14,7 @@ import {
   NotEquals,
 } from 'class-validator'
 
-import { Status } from '@pengode/article/article'
+import { Article, Status } from '@pengode/article/article'
 import { PageRequest } from '@pengode/common/dtos'
 
 export class CreateArticleRequest {
@@ -172,6 +172,45 @@ export class ArticleResponse {
 
   @ApiProperty()
   histories: HistoryResponse[]
+
+  @ApiProperty()
+  createdAt: Date
+
+  @ApiProperty()
+  updatedAt: Date
+
+  static create(article: Article): ArticleResponse {
+    return {
+      id: article.id,
+      title: article.title,
+      thumbnail: article.thumbnail,
+      body: article.body,
+      summary: article.summary,
+      readingTime: article.readingTime,
+      status: article.status,
+      scheduledAt: article.scheduledAt,
+      author: {
+        id: article.author.id,
+        email: article.author.email,
+        username: article.author.username,
+        name: article.author.name,
+        photo: article.author.photo,
+      },
+      categories:
+        article.categories?.map((category) => ({
+          id: category.id,
+          name: category.name,
+        })) || [],
+      histories:
+        article.histories?.map((history) => ({
+          id: history.id,
+          status: history.status,
+          createdAt: history.createdAt,
+        })) || [],
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+    }
+  }
 }
 
 export class FindAllRequest extends PageRequest {

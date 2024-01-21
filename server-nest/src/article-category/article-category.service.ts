@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
-import { LessThan, Repository } from 'typeorm'
+import { LessThan, MoreThan, Raw, Repository } from 'typeorm'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
 import {
@@ -28,7 +28,12 @@ export class ArticleCategoryService {
   async findAll(req: FindAllRequest): Promise<PageResponse<CategoryResponse>> {
     const categories = await this.articleCategoryRepository.find({
       where: {
-        id: LessThan(req.cursor),
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
+        name: req.search
+          ? Raw((alias) => `LOWER(${alias}) LIKE '%${req.search}%'`)
+          : undefined,
       },
       take: req.size,
       order: {
@@ -38,6 +43,7 @@ export class ArticleCategoryService {
 
     return {
       items: categories.map(CategoryResponse.create),
+      previousCursor: categories[0]?.id || 0,
       nextCursor: categories[categories.length - 1]?.id || 0,
     }
   }

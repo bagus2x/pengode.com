@@ -63,3 +63,9 @@ export class AuthResponse {
   @ApiProperty()
   user: UserResponse
 }
+
+export class SocialRequest {
+  @IsNotEmpty()
+  @ApiProperty()
+  token: string
+}

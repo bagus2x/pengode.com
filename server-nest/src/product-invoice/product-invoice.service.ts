@@ -9,7 +9,7 @@ import { InjectRepository } from '@nestjs/typeorm'
 import axios from 'axios'
 import * as crypto from 'crypto'
 import { ClsService } from 'nestjs-cls'
-import { DataSource, In, LessThan, Repository } from 'typeorm'
+import { DataSource, In, LessThan, MoreThan, Repository } from 'typeorm'
 
 import { ConfigService } from '@nestjs/config'
 import { PageResponse } from '@pengode/common/dtos'
@@ -178,7 +178,9 @@ export class ProductInvoiceService {
   async findAll(req: FindAllRequest): Promise<PageResponse<InvoiceResponse>> {
     const products = await this.productInvoiceRepository.find({
       where: {
-        id: LessThan(req.cursor),
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
         status: req.statuses ? In(req.statuses) : undefined,
       },
       take: req.size,
@@ -189,6 +191,7 @@ export class ProductInvoiceService {
 
     return {
       items: products.map(InvoiceResponse.create),
+      previousCursor: products[0]?.id || 0,
       nextCursor: products[products.length - 1]?.id || 0,
     }
   }

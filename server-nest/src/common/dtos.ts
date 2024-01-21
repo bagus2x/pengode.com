@@ -1,9 +1,10 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common'
 import { Type } from 'class-transformer'
-import { IsNumber, ValidateNested } from 'class-validator'
+import { IsNumber, IsOptional, ValidateNested } from 'class-validator'
 
 export class PageResponse<T> {
   items: T[]
+  previousCursor: number
   nextCursor: number
 }
 
@@ -14,7 +15,13 @@ export class PageRequest<T = unknown> {
 
   @IsNumber()
   @Type(() => Number)
-  cursor: number = Math.pow(2, 31) - 1
+  @IsOptional()
+  previousCursor?: number
+
+  @IsNumber()
+  @Type(() => Number)
+  @IsOptional()
+  nextCursor?: number = Math.pow(2, 31) - 1
 
   @ValidateNested({ each: true })
   filter?: T
@@ -27,6 +34,6 @@ export const PageParam = createParamDecorator(
 
     const size = parseInt(query.size) || 10
     const cursor = parseInt(query.cursor) || Math.pow(2, 31) - 1
-    return { size, cursor }
+    return { size, nextCursor: cursor }
   },
 )
