@@ -13,10 +13,22 @@ import { ArticleHistoryModule } from '@pengode/article-history/article-history.m
 import { Article } from '@pengode/article/article'
 import { ArticleModule } from '@pengode/article/article.module'
 import { AuthModule } from '@pengode/auth/auth.module'
+import { ProductCategory } from '@pengode/product-category/product-category'
+import { ProductCategoryModule } from '@pengode/product-category/product-category.module'
+import { ProductInvoiceHistory } from '@pengode/product-invoice-history/product-invoice-history'
+import { ProductInvoiceHistoryModule } from '@pengode/product-invoice-history/product-invoice-history.module'
+import { ProductInvoice } from '@pengode/product-invoice/product-invoice'
+import { ProductInvoiceModule } from '@pengode/product-invoice/product-invoice.module'
+import { ProductLog } from '@pengode/product-log/product-log'
+import { ProductLogModule } from '@pengode/product-log/product-log.module'
+import { Product } from '@pengode/product/product'
+import { ProductModule } from '@pengode/product/product.module'
 import { Role } from '@pengode/role/role'
 import { RoleModule } from '@pengode/role/role.module'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
+import { ProductInvoiceItemModule } from './product-invoice-item/product-invoice-item.module'
+import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoice-item'
 
 @Global()
 @Module({
@@ -32,7 +44,19 @@ import { UserModule } from '@pengode/user/user.module'
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_NAME'),
-        entities: [User, Role, Article, ArticleCategory, ArticleHistory],
+        entities: [
+          Role,
+          User,
+          Article,
+          ArticleCategory,
+          ArticleHistory,
+          Product,
+          ProductCategory,
+          ProductLog,
+          ProductInvoice,
+          ProductInvoiceItem,
+          ProductInvoiceHistory,
+        ],
         synchronize: true,
         logging: true,
       }),
@@ -66,12 +90,18 @@ import { UserModule } from '@pengode/user/user.module'
       },
       inject: [ConfigService],
     }),
+    RoleModule,
     UserModule,
     AuthModule,
     ArticleModule,
     ArticleHistoryModule,
     ArticleCategoryModule,
-    RoleModule,
+    ProductModule,
+    ProductCategoryModule,
+    ProductLogModule,
+    ProductInvoiceModule,
+    ProductInvoiceHistoryModule,
+    ProductInvoiceItemModule,
   ],
   providers: [
     {
