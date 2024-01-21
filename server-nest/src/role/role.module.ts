@@ -17,12 +17,16 @@ export class RoleModule implements OnModuleInit {
     private readonly roleRepository: Repository<Role>,
   ) {}
 
-  onModuleInit() {
-    Role.ROLES.forEach(async (roleName) => {
-      const exists = !!(await this.roleRepository.findOneBy({ name: roleName }))
-      if (exists) return
+  async onModuleInit() {
+    await Promise.all(
+      Role.ROLES.map(async (roleName) => {
+        const exists = !!(await this.roleRepository.findOneBy({
+          name: roleName,
+        }))
+        if (exists) return
 
-      await this.roleRepository.save({ name: roleName })
-    })
+        return await this.roleRepository.save({ name: roleName })
+      }),
+    )
   }
 }
