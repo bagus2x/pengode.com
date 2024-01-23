@@ -1,7 +1,6 @@
-import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager'
+import { CacheModule } from '@nestjs/cache-manager'
 import { Global, Module } from '@nestjs/common'
 import { ConfigModule, ConfigService } from '@nestjs/config'
-import { APP_INTERCEPTOR } from '@nestjs/core'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { redisStore } from 'cache-manager-redis-store'
 import { ClsModule } from 'nestjs-cls'
@@ -17,6 +16,7 @@ import { ProductCategory } from '@pengode/product-category/product-category'
 import { ProductCategoryModule } from '@pengode/product-category/product-category.module'
 import { ProductInvoiceHistory } from '@pengode/product-invoice-history/product-invoice-history'
 import { ProductInvoiceHistoryModule } from '@pengode/product-invoice-history/product-invoice-history.module'
+import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoice-item'
 import { ProductInvoice } from '@pengode/product-invoice/product-invoice'
 import { ProductInvoiceModule } from '@pengode/product-invoice/product-invoice.module'
 import { ProductLog } from '@pengode/product-log/product-log'
@@ -28,7 +28,6 @@ import { RoleModule } from '@pengode/role/role.module'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
 import { ProductInvoiceItemModule } from './product-invoice-item/product-invoice-item.module'
-import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoice-item'
 
 @Global()
 @Module({
@@ -64,14 +63,7 @@ import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoic
     ClsModule.forRoot({
       global: true,
       middleware: {
-        // automatically mount the
-        // ClsMiddleware for all routes
         mount: true,
-        // and use the setup method to
-        // provide default store values.
-        setup: (cls, req) => {
-          cls.set('userId', req.headers['x-user-id'])
-        },
       },
     }),
     CacheModule.register({
@@ -102,12 +94,6 @@ import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoic
     ProductInvoiceModule,
     ProductInvoiceHistoryModule,
     ProductInvoiceItemModule,
-  ],
-  providers: [
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
-    },
   ],
 })
 export class AppModule {}
