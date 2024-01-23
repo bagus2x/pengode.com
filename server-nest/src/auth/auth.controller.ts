@@ -48,7 +48,7 @@ export class AuthController {
     return this.authService.google(req)
   }
 
-  @Post('/refresh-token')
+  @Post('/refresh-tokens')
   @UseGuards(RefreshTokenGuard)
   @ApiOkResponse({ type: AuthResponse })
   refresh(): Promise<AuthResponse> {
