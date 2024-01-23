@@ -4,7 +4,7 @@ import {
   signIn as signInWithNextAuth,
   signOut as signOutWithNextAuth,
 } from '@pengode/auth'
-import { post } from '@pengode/common/rest-client'
+import { post, withAuth } from '@pengode/common/rest-client'
 import { env } from '@pengode/common/utils'
 
 export interface SignInRequest {
@@ -14,7 +14,7 @@ export interface SignInRequest {
 
 export interface Auth {
   accessToken: string
-  refreshToken: string // Not yet implemented,
+  refreshToken: string
   user: {
     id: number
     email: string
@@ -26,7 +26,7 @@ export interface Auth {
 
 export async function signIn(req: SignInRequest) {
   return await post<Auth>({
-    url: `${env('PENGODE_API_BASE_URL')}/auth/sign-in`,
+    url: `${env('PENGODE_API_BASE_URL')}/auth/signin`,
     body: req,
   })
 }
@@ -34,7 +34,7 @@ export async function signIn(req: SignInRequest) {
 export async function signInWithCredentials(
   req: SignInRequest & Parameters<typeof signInWithNextAuth>[1],
 ) {
-  return await signInWithNextAuth('credentials', req)
+  return await signInWithNextAuth('credentials', { ...req })
 }
 
 export async function signInWithGithub(
@@ -69,4 +69,13 @@ export async function google(req: SocialRequest) {
 
 export async function signOut() {
   return signOutWithNextAuth()
+}
+
+export interface RefreshTokensRequest {
+  token: string
+}
+
+export async function refreshTokens(req: RefreshTokensRequest) {
+  const url = `${env('PENGODE_API_BASE_URL')}/auth/refresh-tokens`
+  return await withAuth(post, `Bearer ${req.token}`)<Auth>({ url, body: {} })
 }

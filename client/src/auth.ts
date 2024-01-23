@@ -3,8 +3,14 @@ import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import GitHub from 'next-auth/providers/github'
 import Google from 'next-auth/providers/google'
+import { jwtDecode } from 'jwt-decode'
 
-import { signIn as credentialSignIn, github, google } from '@pengode/data/auth'
+import {
+  signIn as credentialSignIn,
+  github,
+  google,
+  refreshTokens,
+} from '@pengode/data/auth'
 
 declare module 'next-auth' {
   interface Session {
@@ -14,14 +20,17 @@ declare module 'next-auth' {
       email: string
       image?: string | null
       accessToken: string
+      refreshToken: string
     }
   }
 }
 
-declare module 'next-auth' {}
-
-export const authConfig = {
+export const authConfig: NextAuthConfig = {
   debug: true,
+  session: {
+    strategy: 'jwt',
+  },
+  events: {},
   providers: [
     GitHub({
       clientId: process.env.GITHUB_ID,
@@ -48,47 +57,61 @@ export const authConfig = {
           image: res.user.photo,
           id: `${res.user.id}`,
           accessToken: res.accessToken,
+          refreshToken: res.refreshToken,
         }
       },
     }),
   ],
   callbacks: {
+    signIn: () => {
+      return true
+    },
     authorized(params) {
       return !!params.auth?.user
     },
     async jwt({ account, token, user }) {
-      if (!account || !user.email || !user.name) return token
-
-      if (account.provider === 'github' && account.access_token) {
+      if (account?.provider === 'github' && account?.access_token) {
         const res = await github({ token: account.access_token })
         token.id = res.user.id
         token.accessToken = res.accessToken
-      } else if (account.provider === 'google' && account.id_token) {
+        token.refreshToken = res.refreshToken
+      } else if (account?.provider === 'google' && account.id_token) {
         const res = await google({ token: account.id_token })
         token.id = res.user.id
         token.accessToken = res.accessToken
+        token.refreshToken = res.refreshToken
       } else if (
-        account.provider === 'credentials' &&
+        account?.provider === 'credentials' &&
         (user as any).accessToken
       ) {
-        token.id = parseInt(user.id)
+        token.id = parseInt(user.id!!)
         token.accessToken = (user as any).accessToken
+        token.refreshToken = (user as any).refreshToken
+      }
+
+      const accessToken = token.accessToken as string
+      const refreshToken = token.refreshToken as string
+      const exp = jwtDecode(accessToken).exp
+      if (exp && Date.now() / 1000 > exp) {
+        const res = await refreshTokens({ token: refreshToken })
+        token.accessToken = res.accessToken
+        token.refreshToken = res.refreshToken
       }
 
       return token
     },
-    async session({ session, token }) {
-      if (token.accessToken) {
-        session.user.id = token.id as number
-        session.user.accessToken = token.accessToken as string
+    async session({ session, token }: any) {
+      if (token && token.accessToken && token.refreshToken) {
+        session.user.id = token.id
+        session.user.accessToken = token.accessToken
+        session.user.refreshToken = token.refreshToken
       }
-
       return session
     },
   },
   pages: {
     signIn: '/signin',
   },
-} satisfies NextAuthConfig
+}
 
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
