@@ -4,10 +4,8 @@ import { getArticles } from '@pengode/data/article'
 
 export default async function BlogPage() {
   const articles = await getArticles({
-    page: 0,
     size: 20,
     search: '',
-    statusIds: [],
   })
 
   return (
