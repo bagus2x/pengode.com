@@ -44,21 +44,17 @@ const menus = [
     ],
   },
   {
-    name: 'Project',
-    href: '/dashboard/project',
+    name: 'Product',
+    href: '/dashboard/product',
     Icon: ProjectIcon,
     sub: [
       {
         name: 'Overview',
-        href: '/dashboard/project',
+        href: '/dashboard/product',
       },
       {
         name: 'New',
-        href: '/dashboard/project/new',
-      },
-      {
-        name: 'Trash',
-        href: '/dashboard/project/trash',
+        href: '/dashboard/product/editor',
       },
     ],
   },
