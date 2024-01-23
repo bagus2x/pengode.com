@@ -58,8 +58,8 @@ export function SignInForm({ className }: PropsWithClassName) {
 
   const handleSignInWithCredentials = (req: z.infer<typeof formSchema>) => {
     signInMutation.mutate(req, {
-      onSuccess: () => {
-        router.replace(callbackUrl ?? '/dashboard')
+      onSuccess: async () => {
+        toast.success('Signed in')
       },
       onError: (err) => {
         err.message.split(', ').forEach((message) => {
