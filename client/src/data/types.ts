@@ -1,5 +1,9 @@
-export interface Page<T> {
-  page: number
+export interface Cursor {
+  previousCursor?: number
+  nextCursor?: number
+}
+
+export interface Page<T> extends Cursor {
   size: number
-  data: T[]
+  items: T[]
 }
