@@ -1,5 +1,6 @@
 'use client'
 
+import CountryFlag from 'react-country-flag'
 import {
   Bar,
   BarChart,
@@ -8,7 +9,6 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import CountryFlag from 'react-country-flag'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'

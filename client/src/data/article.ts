@@ -9,7 +9,9 @@ import {
   withAuth,
 } from '@pengode/common/rest-client'
 import { env } from '@pengode/common/utils'
-import { Page } from '@pengode/data/types'
+import { Cursor, Page } from '@pengode/data/types'
+
+export type Status = 'DRAFT' | 'PUBLISHED' | 'SCHEDULED' | 'DELETED'
 
 export interface Article {
   id: number
@@ -22,10 +24,7 @@ export interface Article {
   body: string
   summary: string
   readingTime?: number | null
-  status: {
-    id: string
-    name: string
-  }
+  status: Status
   categories: { id: number; name: string }[]
   createdAt: string
   updatedAt: string
@@ -36,7 +35,7 @@ export async function createArticle(req: {
   thumbnail?: string | null
   body: string
   summary: string
-  readingTime?: number | null,
+  readingTime?: number | null
   categoryIds: number[]
 }) {
   return await withAuth(post)<Article>({
@@ -46,19 +45,21 @@ export async function createArticle(req: {
 }
 
 export async function getArticles(req?: {
-  page?: number
+  cursor?: Cursor
   size?: number
   search?: string
-  statusIds?: number[]
+  statuses?: Status[]
 }) {
   const url = new URL(`${env('PENGODE_API_BASE_URL')}/articles`)
-  if (req?.page) url.searchParams.append('page', `${req.page}`)
+  if (req?.cursor?.nextCursor)
+    url.searchParams.append('nextCursor', `${req.cursor?.nextCursor}`)
+  if (req?.cursor?.previousCursor)
+    url.searchParams.append('previousCursor', `${req.cursor?.previousCursor}`)
   if (req?.size) url.searchParams.append('size', `${req.size}`)
-  url.searchParams.append('order.id', 'desc')
   if (req?.search) url.searchParams.append('search', req.search)
-  if (req?.statusIds) {
-    req?.statusIds.forEach((statusId) => {
-      url.searchParams.append('status_id', `${statusId}`)
+  if (req?.statuses) {
+    req?.statuses.forEach((statusId) => {
+      url.searchParams.append('statuses', `${statusId}`)
     })
   }
 

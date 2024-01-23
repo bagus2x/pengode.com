@@ -14,7 +14,9 @@ import {
   UndoIcon,
 } from 'lucide-react'
 import Image from 'next/image'
-import { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
@@ -35,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@pengode/components/ui/dropdown-menu'
+import { ScrollArea, ScrollBar } from '@pengode/components/ui/scroll-area'
 import {
   Table,
   TableBody,
@@ -45,6 +48,7 @@ import {
 } from '@pengode/components/ui/table'
 import {
   Article,
+  Status,
   deleteArticle,
   draftArticle,
   getArticles,
@@ -52,34 +56,36 @@ import {
   restoreArticle,
   scheduleArticle,
 } from '@pengode/data/article'
-import { ArticleStatus, getStatuses } from '@pengode/data/article-status'
-import Link from 'next/link'
-import { toast } from 'sonner'
-import { ScrollArea, ScrollBar } from '@pengode/components/ui/scroll-area'
+import { Cursor } from '@pengode/data/types'
 
 export const ArticleTable = ({ className }: PropsWithClassName) => {
-  const [page, setPage] = useState(0)
+  const [cursor, setCursor] = useState<Cursor>({
+    nextCursor: Math.pow(2, 31) - 1,
+  })
   const [size, setSize] = useState(10)
   const [search, setSearch] = useState('')
-  const [selectedStatuses, setSelectedStatuses] = useState<ArticleStatus[]>([])
-  const statusIds = useMemo(
-    () => selectedStatuses.map((status) => status.id),
-    [selectedStatuses],
-  )
-  const { data: statuses, ...getStatusesQuery } = useQuery({
-    queryKey: ['GET_ARTICLE_STATUSES'],
-    queryFn: async () => await getStatuses(),
-  })
+  const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([
+    'DRAFT',
+    'PUBLISHED',
+    'SCHEDULED',
+    'DELETED',
+  ])
   const { data: articles, ...getArticlesQuery } = useQuery({
-    queryKey: ['GET_ARTICLES', page, size, search, selectedStatuses],
+    queryKey: [
+      'GET_ARTICLES',
+      cursor.previousCursor,
+      cursor.nextCursor,
+      size,
+      search,
+      selectedStatuses,
+    ],
     queryFn: async () =>
       await getArticles({
-        page,
+        cursor,
         size,
         search,
-        statusIds,
+        statuses: selectedStatuses,
       }),
-    enabled: !!statuses,
   })
   const draftArticleMutation = useMutation({ mutationFn: draftArticle })
   const scheduleArticleMutation = useMutation({ mutationFn: scheduleArticle })
@@ -90,14 +96,6 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
   const [scheduledArticle, setScheduledArticle] = useState<Article | null>(null)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const { confirm, ConfirmationDialog } = useConfirmation()
-
-  useEffect(() => {
-    if (selectedStatuses.length === 0 && statuses?.length) {
-      setSelectedStatuses(
-        statuses.filter((status) => status.name !== 'DELETED'),
-      )
-    }
-  }, [selectedStatuses.length, statuses])
 
   const handleDraftArticle = (article: Article) => () => {
     confirm({
@@ -173,11 +171,11 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
   const handleDeleteArticle = (article: Article) => () => {
     confirm({
       title:
-        article.status.name === 'DELETED'
+        article.status === 'DELETED'
           ? `Are you sure to delete "${article.title}" permanently?`
           : `Are you sure to delete ${article.title}?`,
       description:
-        article.status.name === 'DELETED'
+        article.status === 'DELETED'
           ? 'This article will be deleted permanently'
           : 'This article will be deleted permanently after 30 Days',
       onConfirm: () => {
@@ -186,7 +184,7 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
         deleteArticleMutation.mutate(
           {
             articleId: article.id,
-            permanent: article.status.name === 'DELETED',
+            permanent: article.status === 'DELETED',
           },
           {
             onSuccess: (article) => {
@@ -203,6 +201,14 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
         )
       },
     })
+  }
+
+  const handleNextCursor = () => {
+    setCursor({ nextCursor: articles?.nextCursor })
+  }
+
+  const handlePreviousCursor = () => {
+    setCursor({ previousCursor: articles?.previousCursor })
   }
 
   const handleRestoreArticle = (article: Article) => () => {
@@ -236,7 +242,6 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
             search={search}
             onSearch={setSearch}
             className='mb-4 px-4'
-            statuses={statuses || []}
             selectedStatuses={selectedStatuses}
             onChangeStatuses={setSelectedStatuses}
           />
@@ -252,7 +257,7 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
                 </TableRow>
               </TableHeader>
               <TableBody className='border-b border-b-border'>
-                {articles?.data?.map((article) => (
+                {articles?.items?.map((article) => (
                   <TableRow key={article.id}>
                     <TableCell className='w-28 font-medium'>
                       <div className='flex items-center gap-2'>
@@ -275,16 +280,16 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
                       <Badge
                         className={cn(
                           'me-2',
-                          article.status.name === 'DRAFT' &&
+                          article.status === 'DRAFT' &&
                             'bg-indigo-100 text-indigo-500 hover:bg-indigo-100',
-                          article.status.name === 'SCHEDULED' &&
+                          article.status === 'SCHEDULED' &&
                             'bg-orange-100 text-orange-500 hover:bg-orange-100',
-                          article.status.name === 'PUBLISHED' &&
+                          article.status === 'PUBLISHED' &&
                             'bg-green-100 text-green-500 hover:bg-green-100',
-                          article.status.name === 'DELETED' &&
+                          article.status === 'DELETED' &&
                             'bg-red-100 text-red-500 hover:bg-red-100',
                         )}>
-                        {article.status.name.toLowerCase()}
+                        {article.status.toLowerCase()}
                       </Badge>
                       {article.title}
                     </TableCell>
@@ -313,21 +318,21 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={handlePublishArticle(article)}
-                            disabled={article.status.name !== 'DRAFT'}>
+                            disabled={article.status !== 'DRAFT'}>
                             <SendIcon className='me-2 h-4 w-4' />
                             Publish
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setScheduledArticle(article)}
-                            disabled={article.status.name !== 'DRAFT'}>
+                            disabled={article.status !== 'DRAFT'}>
                             <CalendarClockIcon className='me-2 h-4 w-4' />
                             Schedule
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={handleDraftArticle(article)}
                             disabled={
-                              article.status.name !== 'PUBLISHED' &&
-                              article.status.name !== 'SCHEDULED'
+                              article.status !== 'PUBLISHED' &&
+                              article.status !== 'SCHEDULED'
                             }>
                             <UndoIcon className='me-2 h-4 w-4' />
                             Draft
@@ -339,7 +344,7 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={handleRestoreArticle(article)}
-                            disabled={article.status.name !== 'DELETED'}>
+                            disabled={article.status !== 'DELETED'}>
                             <UndoDotIcon className='me-2 h-4 w-4' />
                             Restore
                           </DropdownMenuItem>
@@ -360,18 +365,21 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
             <ScrollBar orientation='horizontal' />
           </ScrollArea>
           <TablePagination
-            page={page}
             size={size}
             onChangeSize={setSize}
-            length={articles?.data.length}
-            disablePreviousPage={!articles || page === 0}
-            onClickPreviousPage={() => setPage((page) => page - 1)}
-            disableNextPage={articles?.data.length !== size}
-            onClickNextPage={() => setPage((page) => page + 1)}
+            length={articles?.items?.length}
+            disablePreviousPage={!articles || !articles?.previousCursor}
+            onClickPreviousPage={handlePreviousCursor}
+            disableNextPage={
+              !articles ||
+              !articles.nextCursor ||
+              articles?.items?.length < size
+            }
+            onClickNextPage={handleNextCursor}
             className='px-4'
           />
         </Card>
-        {(getStatusesQuery.isLoading || getArticlesQuery.isLoading) && (
+        {getArticlesQuery.isLoading && (
           <div className='absolute left-1/2 top-1/2 mt-14 -translate-x-1/2 -translate-y-1/2 transform'>
             <Loader2Icon className='animate-spin' />
           </div>

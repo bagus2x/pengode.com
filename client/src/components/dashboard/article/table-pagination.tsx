@@ -11,7 +11,6 @@ import {
 import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 
 export type TablePaginationProps = PropsWithClassName & {
-  page?: number
   size?: number
   onChangeSize?: (size: number) => void
   length?: number

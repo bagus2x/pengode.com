@@ -1,5 +1,6 @@
 'use client'
 
+import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
@@ -10,8 +11,8 @@ import { useForm } from 'react-hook-form'
 import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
 
+import { restErrorMessages } from '@pengode/common/rest-client'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { NewCategoryDialog } from '@pengode/components/dashboard/article/new-category-dialog'
@@ -45,7 +46,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 const Editor = dynamic(
   () =>
     import('@pengode/components/dashboard/article/article-editor').then(
-      (components) => components.PostEditor,
+      (components) => components.ArticleEditor,
     ),
   {
     ssr: false,
@@ -118,8 +119,8 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
   })
   const { resolvedTheme } = useTheme()
   const { data: categories } = useQuery({
-    queryKey: ['GET_CATEGORIES'],
-    queryFn: async () => await getCategories(),
+    queryKey: ['GET_ARTICLE_CATEGORIES'],
+    queryFn: async () => await getCategories({ size: 100 }),
   })
   const createArticleMutation = useMutation({
     mutationFn: async ({ thumbnail, ...req }: z.infer<typeof formSchema>) => {
@@ -147,7 +148,7 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
 
       return await createArticle(req)
     },
-    mutationKey: ['ARTICLE_EDITOR', editMode],
+    mutationKey: ['CREATE_OR_UPDATE_ARTICLE', editMode],
   })
   const router = useRouter()
   const blockUi = useBlockUi()
@@ -187,7 +188,7 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
         router.replace('/dashboard/article')
       },
       onError: (err) => {
-        err.message.split(', ').forEach((message) => {
+        restErrorMessages(err).forEach((message) => {
           toast.error(message)
         })
       },
@@ -268,7 +269,7 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
                     <FormControl>
                       <MultiSelect
                         options={
-                          categories?.map((category) => ({
+                          categories?.items?.map((category) => ({
                             label: category.name,
                             value: `${category.id}`,
                           })) || []

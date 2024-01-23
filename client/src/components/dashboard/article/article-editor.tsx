@@ -36,7 +36,7 @@ import { UndoRedo } from '@mdxeditor/editor/plugins/toolbar/components/UndoRedo'
 import '@mdxeditor/editor/style.css'
 import type { ForwardedRef } from 'react'
 
-export const PostEditor = ({
+export const ArticleEditor = ({
   editorRef,
   diffMarkdown,
   ...props

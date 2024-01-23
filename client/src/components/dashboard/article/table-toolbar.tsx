@@ -25,26 +25,26 @@ import {
   PopoverTrigger,
 } from '@pengode/components/ui/popover'
 import { Separator } from '@pengode/components/ui/separator'
-import { ArticleStatus } from '@pengode/data/article-status'
 import Link from 'next/link'
+import { Status } from '@pengode/data/article'
 
 export type TableToolbarProps = PropsWithClassName & {
   search: string
   onSearch: (search: string) => void
-  statuses: ArticleStatus[]
-  selectedStatuses: ArticleStatus[]
-  onChangeStatuses: (statuses: ArticleStatus[]) => void
+  selectedStatuses: Status[]
+  onChangeStatuses: (statuses: Status[]) => void
 }
+
+const statuses: Status[] = ['DRAFT', 'SCHEDULED', 'PUBLISHED', 'DELETED']
 
 export const TableToolbar = ({
   search,
   onSearch,
   className,
-  statuses,
   selectedStatuses,
   onChangeStatuses,
 }: TableToolbarProps) => {
-  const handleChangeStatuses = (selected: ArticleStatus, only?: boolean) => {
+  const handleChangeStatuses = (selected: Status, only?: boolean) => {
     if (only) {
       onChangeStatuses([selected])
       return
@@ -53,9 +53,7 @@ export const TableToolbar = ({
     if (selectedStatuses.includes(selected)) {
       if (selectedStatuses.length === 1) return
 
-      onChangeStatuses(
-        selectedStatuses.filter((status) => status.id !== selected.id),
-      )
+      onChangeStatuses(selectedStatuses.filter((status) => status !== selected))
       return
     }
 
@@ -84,8 +82,8 @@ export const TableToolbar = ({
               {selectedStatuses.length < 3 ? (
                 <div className='space-x-1'>
                   {selectedStatuses.map((status) => (
-                    <Badge key={status.id} variant='secondary'>
-                      {status.name}
+                    <Badge key={status} variant='secondary'>
+                      {status}
                     </Badge>
                   ))}
                 </div>
@@ -103,18 +101,16 @@ export const TableToolbar = ({
               <CommandGroup>
                 {statuses.map((status) => (
                   <CommandItem
-                    key={status.id}
+                    key={status}
                     onSelect={() => handleChangeStatuses(status)}
                     className='group items-center'>
                     <CheckIcon
                       className={cn(
                         'me-2 h-4 w-4',
-                        !selectedStatuses
-                          .map((status) => status.id)
-                          .includes(status.id) && 'opacity-0',
+                        !selectedStatuses.includes(status) && 'opacity-0',
                       )}
                     />
-                    <span className='flex-1'>{status.name}</span>
+                    <span className='flex-1'>{status}</span>
                     <Button
                       size='sm'
                       variant='secondary'
