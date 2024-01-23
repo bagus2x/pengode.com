@@ -20,7 +20,7 @@ export function ArticleList({
   const { data: articlePage } = useQuery({
     queryKey: ['GET_ARTICLES'],
     initialData: initialArticles,
-    queryFn: async () => await getArticles({ page: 0, size: 20, search: '' }),
+    queryFn: async () => await getArticles(),
   })
 
   return (
@@ -29,7 +29,7 @@ export function ArticleList({
         'mx-auto flex max-w-screen-xl flex-col gap-8 p-4',
         className,
       )}>
-      {articlePage?.data.map((article) => (
+      {articlePage?.items.map((article) => (
         <Fragment key={article.id}>
           <ArticleItem
             id={article.id}
