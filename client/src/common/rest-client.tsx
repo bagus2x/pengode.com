@@ -12,22 +12,31 @@ export type RestClientRequest = Omit<RequestInit, 'body'> & {
   url: string | URL | globalThis.Request
   body?: any
 }
-
-export class RestError<T> extends Error {
+export class RestError extends Error {
   constructor(
-    readonly res: Response,
-    readonly message: string,
-    readonly data: T,
+    readonly response: Response,
+    readonly data: any,
   ) {
-    super(message)
+    super(JSON.stringify(data))
   }
+}
+
+export const restErrorMessages = (error: Error): string[] => {
+  if (!error.message) return ['Unknown error']
+
+  const err = JSON.parse(error.message) as RestError
+
+  if (typeof err?.message === 'string') return [err.message]
+  else if (Array.isArray(err.message)) return err.message
+  return [error.message]
 }
 
 export const withAuth = (
   method: <T>(req: RestClientRequest) => Promise<T>,
+  token?: string,
 ): (<T>(req: RestClientRequest) => Promise<T>) => {
   return async (req) => {
-    const bearer = await getBearer()
+    const bearer = token ? token : await getBearer()
     if (bearer) {
       req.headers = {
         ...req.headers,
@@ -69,13 +78,7 @@ export async function get<T>({
   const res = await fetch(url, init)
   const data = await res.json()
 
-  if (!res.ok) {
-    throw new RestError(
-      res,
-      'Failed to get ' + JSON.stringify({ data, url }),
-      data,
-    )
-  }
+  if (!res.ok) throw new RestError(res, data)
 
   return data
 }
@@ -93,7 +96,7 @@ export async function post<T>({
       'Content-Type': 'application/json',
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : JSON.stringify({}),
     ...customInit,
   }
 
@@ -111,13 +114,7 @@ export async function post<T>({
   const res = await fetch(url, init)
   const data = await res.json()
 
-  if (!res.ok) {
-    throw new RestError(
-      res,
-      'Failed to post:' + JSON.stringify({ data, url }),
-      data,
-    )
-  }
+  if (!res.ok) throw new RestError(res, data)
 
   return data
 }
@@ -135,7 +132,7 @@ export async function put<T>({
       'Content-Type': 'application/json',
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : JSON.stringify({}),
     ...customInit,
   }
 
@@ -153,13 +150,7 @@ export async function put<T>({
   const res = await fetch(url, init)
   const data = await res.json()
 
-  if (!res.ok) {
-    throw new RestError(
-      res,
-      'Failed to put ' + JSON.stringify({ url, data }),
-      data,
-    )
-  }
+  if (!res.ok) throw new RestError(res, data)
 
   return data
 }
@@ -177,7 +168,7 @@ export async function patch<T>({
       'Content-Type': 'application/json',
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : JSON.stringify({}),
     ...customInit,
   }
 
@@ -195,13 +186,7 @@ export async function patch<T>({
   const res = await fetch(url, init)
   const data = await res.json()
 
-  if (!res.ok) {
-    throw new RestError(
-      res,
-      'Failed to patch ' + JSON.stringify({ data, url }),
-      data,
-    )
-  }
+  if (!res.ok) throw new RestError(res, data)
 
   return data
 }
@@ -219,7 +204,7 @@ export async function del<T>({
       'Content-Type': 'application/json',
       ...headers,
     },
-    body: body ? JSON.stringify(body) : undefined,
+    body: body ? JSON.stringify(body) : JSON.stringify({}),
     ...customInit,
   }
 
@@ -237,13 +222,7 @@ export async function del<T>({
   const res = await fetch(url, init)
   const data = await res.json()
 
-  if (!res.ok) {
-    throw new RestError(
-      res,
-      'Failed to delete ' + JSON.stringify({ data, url }),
-      data,
-    )
-  }
+  if (!res.ok) throw new RestError(res, data)
 
   return data
 }
