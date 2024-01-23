@@ -9,8 +9,11 @@ import {
   CreateProductRequest,
   FindAllRequest,
   ProductResponse,
+  UpdateProductRequest,
 } from '@pengode/product/product.dto'
 import { PageResponse } from '@pengode/common/dtos'
+import { User } from '@pengode/user/user'
+import { ClsService } from 'nestjs-cls'
 
 @Injectable()
 export class ProductService {
@@ -19,6 +22,7 @@ export class ProductService {
     private readonly dataSource: DataSource,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    private readonly clsService: ClsService,
   ) {}
 
   async create(req: CreateProductRequest): Promise<ProductResponse> {
@@ -26,6 +30,7 @@ export class ProductService {
       const productRepository = entityManager.getRepository(Product)
       const productCategoryRepository =
         entityManager.getRepository(ProductCategory)
+      const userRepository = entityManager.getRepository(User)
 
       const categories = await Promise.all(
         req.categoryIds.map(async (categoryId) => {
@@ -42,6 +47,13 @@ export class ProductService {
         }),
       )
 
+      const owner = await userRepository.findOne({
+        where: { id: this.clsService.get<number>('userId') },
+      })
+      if (!owner) {
+        throw new NotFoundException('owner is not found')
+      }
+
       const product = await productRepository.save({
         title: req.title,
         description: req.description,
@@ -53,6 +65,7 @@ export class ProductService {
         numberOfRatings: 0,
         numberOfReviewers: 0,
         categories,
+        owner,
       })
 
       return product
@@ -92,6 +105,51 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('product is not found')
     }
+
+    return ProductResponse.create(product)
+  }
+
+  async update(
+    productId: number,
+    req: UpdateProductRequest,
+  ): Promise<ProductResponse> {
+    const product = await this.dataSource.transaction(async (entityManager) => {
+      const productRepository = entityManager.getRepository(Product)
+      const productCategoryRepository =
+        entityManager.getRepository(ProductCategory)
+
+      const product = await productRepository.findOne({
+        where: { id: productId },
+      })
+      if (!product) {
+        throw new NotFoundException('product is not found')
+      }
+
+      const categories = await Promise.all(
+        req.categoryIds.map(async (categoryId) => {
+          const category = await productCategoryRepository.findOneBy({
+            id: categoryId,
+          })
+          if (!category) {
+            throw new NotFoundException(
+              `category with id ${categoryId} is not found`,
+            )
+          }
+
+          return category
+        }),
+      )
+
+      product.title = req.title
+      product.description = req.description
+      product.previewUrl = req.previewUrl
+      product.price = new Decimal(req.price)
+      product.discount = req.discount
+      product.status = Status[req.status]
+      product.categories = categories
+
+      return await productRepository.save(product)
+    })
 
     return ProductResponse.create(product)
   }

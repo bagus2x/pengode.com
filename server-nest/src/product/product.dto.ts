@@ -31,6 +31,10 @@ export class CreateProductRequest {
   @IsDecimal()
   price: string
 
+  @IsNumber()
+  @IsOptional()
+  discount?: number | null
+
   @IsEnum(Status)
   status: Status
 
@@ -43,28 +47,9 @@ export class CreateProductRequest {
   @IsOptional()
   @ApiProperty()
   categoryIds: number[] = []
-
-  @IsNumber()
-  @IsOptional()
-  discount?: number | null
 }
 
-export class ProductLogResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  name: string
-
-  @ApiProperty()
-  productUrl: string
-
-  @ApiProperty()
-  description: string
-
-  @ApiProperty()
-  createdAt: Date
-}
+export class UpdateProductRequest extends CreateProductRequest {}
 
 export class CategoryResponse {
   @ApiProperty()
@@ -72,6 +57,23 @@ export class CategoryResponse {
 
   @ApiProperty()
   name: string
+}
+
+export class OwnerResponse {
+  @ApiProperty()
+  id: number
+
+  @ApiProperty()
+  email: string
+
+  @ApiProperty()
+  username: string
+
+  @ApiProperty()
+  name: string
+
+  @ApiProperty()
+  photo?: string | null
 }
 
 export class ProductResponse {
@@ -100,7 +102,10 @@ export class ProductResponse {
   categories: CategoryResponse[]
 
   @ApiProperty()
-  logs: ProductLogResponse[]
+  owner: OwnerResponse
+
+  @ApiProperty()
+  createdAt: Date
 
   static create(product: Product): ProductResponse {
     return {
@@ -113,9 +118,16 @@ export class ProductResponse {
         id: category.id,
         name: category.name,
       })),
-      logs: product.logs,
       status: product.status,
       discount: product.discount,
+      owner: {
+        id: product.owner.id,
+        email: product.owner.email,
+        username: product.owner.username,
+        name: product.owner.name,
+        photo: product.owner.photo,
+      },
+      createdAt: product.createdAt,
     }
   }
 }

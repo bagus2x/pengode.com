@@ -1,13 +1,16 @@
 import { DecimalTransformer } from '@pengode/common/transformers'
 import { ProductCategory } from '@pengode/product-category/product-category'
 import { ProductLog } from '@pengode/product-log/product-log'
+import { User } from '@pengode/user/user'
 import Decimal from 'decimal.js'
 import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   JoinTable,
   ManyToMany,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -61,6 +64,10 @@ export class Product {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
 
+  @ManyToOne(() => User, { eager: true })
+  @JoinColumn({ name: 'owner_id', referencedColumnName: 'id' })
+  owner: User
+
   @ManyToMany(() => ProductCategory, { eager: true })
   @JoinTable({
     name: 'tr_product_category',
@@ -75,6 +82,6 @@ export class Product {
   })
   categories: ProductCategory[]
 
-  @OneToMany(() => ProductLog, (log) => log.product, { eager: true })
+  @OneToMany(() => ProductLog, (log) => log.product)
   logs: ProductLog[]
 }

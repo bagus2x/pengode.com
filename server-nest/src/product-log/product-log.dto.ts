@@ -1,9 +1,43 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { Transform, Type } from 'class-transformer'
-import { IsArray, IsNumber, IsOptional } from 'class-validator'
+import {
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  IsUrl,
+  MaxLength,
+} from 'class-validator'
 
 import { PageRequest } from '@pengode/common/dtos'
 import { ProductLog } from '@pengode/product-log/product-log'
+
+export class CreateLogRequest {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
+  @ApiProperty()
+  name: string
+
+  @IsNotEmpty()
+  @IsUrl()
+  @ApiProperty()
+  productUrl: string
+
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  description: string
+
+  @ApiProperty()
+  @IsNumber()
+  @IsPositive()
+  productId: number
+}
+
+export class UpdateLogRequest extends CreateLogRequest {}
 
 export class ProductResponse {
   @ApiProperty()
@@ -29,19 +63,19 @@ export class LogResponse {
   @ApiProperty()
   name: string
 
-  @ApiProperty({ name: 'product_url' })
+  @ApiProperty()
   productUrl: string
 
-  @ApiProperty({ type: 'text' })
+  @ApiProperty()
   description: string
 
   @ApiProperty()
   product: ProductResponse
 
-  @ApiProperty({ type: 'text' })
+  @ApiProperty()
   createdAt: Date
 
-  @ApiProperty({ type: 'text' })
+  @ApiProperty()
   updatedAt: Date
 
   static create(log: ProductLog): LogResponse {
