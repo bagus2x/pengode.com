@@ -143,12 +143,11 @@ export class ProductInvoiceService {
           },
           item_details: products.map((product) => ({
             id: product.id,
-            price: product.price.times(product.discount || 1).toString(),
+            price: product.price
+              .sub(product.price.times(product.discount || 0))
+              .toString(),
             quantity: 1,
             name: product.title,
-            category: product.categories.length
-              ? product.categories.map((category) => category.name).join(', ')
-              : undefined,
             merchant_name: 'Pengode',
           })),
         },

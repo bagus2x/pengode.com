@@ -56,11 +56,9 @@ export class ProductInvoice {
 
   static grossAmount(items: { price: Decimal; discount?: number }[]): Decimal {
     return items.reduce((grossAmount, item) => {
-      const price = item.discount
-        ? item.price.times(new Decimal(item.discount))
-        : item.price
-
-      return grossAmount.add(price)
+      return grossAmount.add(
+        item.price.sub(item.price.times(new Decimal(item.discount || 0))),
+      )
     }, new Decimal(0))
   }
 }
