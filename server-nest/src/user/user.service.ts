@@ -14,11 +14,11 @@ export class UserService {
 
   async findAll(): Promise<UserResponse[]> {
     const users = await this.userRepository.find({ relations: { roles: true } })
-    return users.map(UserResponse.build)
+    return users.map(UserResponse.create)
   }
 
   async findById(userId: number): Promise<UserResponse> {
     const user = await this.userRepository.findOne({ where: { id: userId } })
-    return UserResponse.build(user)
+    return UserResponse.create(user)
   }
 }

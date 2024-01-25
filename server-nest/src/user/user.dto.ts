@@ -18,7 +18,7 @@ export class UserResponse {
 
   roles: { id: number; name: string }[]
 
-  static build(user: User): UserResponse {
+  static create(user: User): UserResponse {
     return {
       id: user.id,
       email: user.email,
