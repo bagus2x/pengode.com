@@ -29,7 +29,7 @@ export class ProductLog {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
 
-  @ManyToOne(() => Product, (product) => product.logs, { eager: true })
+  @ManyToOne(() => Product, (product) => product.logs)
   @JoinColumn({ name: 'product_id', referencedColumnName: 'id' })
   product: Product
 }

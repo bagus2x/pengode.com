@@ -55,8 +55,8 @@ export class Product {
   @Column({ name: 'number_of_ratings' })
   numberOfRatings: number
 
-  @Column({ name: 'number_of_reviewers' })
-  numberOfReviewers: number
+  @Column({ name: 'number_of_buyers' })
+  numberOfBuyers: number
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
@@ -64,11 +64,11 @@ export class Product {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date
 
-  @ManyToOne(() => User, { eager: true })
+  @ManyToOne(() => User)
   @JoinColumn({ name: 'owner_id', referencedColumnName: 'id' })
   owner: User
 
-  @ManyToMany(() => ProductCategory, { eager: true })
+  @ManyToMany(() => ProductCategory)
   @JoinTable({
     name: 'tr_product_category',
     joinColumn: {

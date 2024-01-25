@@ -1,9 +1,14 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { PlusCircleIcon } from 'lucide-react'
-import React, { useState } from 'react'
+import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Loader2Icon } from 'lucide-react'
+import { useTheme } from 'next-themes'
+import dynamic from 'next/dynamic'
+import React, { forwardRef, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
@@ -27,10 +32,28 @@ import {
   FormMessage,
 } from '@pengode/components/ui/form'
 import { Input } from '@pengode/components/ui/input'
-import { createCategory } from '@pengode/data/product-category'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createLog } from '@pengode/data/product-log'
-import { Textarea } from '@pengode/components/ui/textarea'
+
+const Editor = dynamic(
+  () =>
+    import('@pengode/components/dashboard/product/log-editor').then(
+      (components) => components.ProductEditor,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className='grid w-full place-items-center p-4'>
+        <Loader2Icon className='animate-spin' />
+      </div>
+    ),
+  },
+)
+
+const ForwardedEditor = forwardRef<
+  MDXEditorMethods,
+  MDXEditorProps & { diffMarkdown: string }
+>((props, ref) => <Editor {...props} editorRef={ref} />)
+ForwardedEditor.displayName = 'ForwardedEditor'
 
 export const formSchema = z.object({
   name: z.string().max(255),
@@ -60,6 +83,8 @@ export const NewLogDialog = ({
   })
   const queryClient = useQueryClient()
   const createLogMutation = useMutation({ mutationFn: createLog })
+  const { resolvedTheme } = useTheme()
+  const editorRef = useRef<MDXEditorMethods>(null)
 
   const handleSubmit = (req: z.infer<typeof formSchema>) => {
     if (!productId) return
@@ -69,7 +94,7 @@ export const NewLogDialog = ({
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({
-            queryKey: ['GET_PRODUCT_LOGS', productId],
+            queryKey: ['GET_PRODUCT', productId],
           })
           setOpen(false)
         },
@@ -85,14 +110,14 @@ export const NewLogDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{renderButton}</DialogTrigger>
-      <DialogContent className={cn('sm:max-w-sm', className)}>
+      <DialogContent className={cn('sm:max-w-screen-md', className)}>
         <Form {...form}>
           <form
             onSubmit={(ev) => {
               ev.stopPropagation()
               form.handleSubmit(handleSubmit)(ev)
             }}
-            className='w-full'>
+            className='w-full min-w-0'>
             <DialogHeader className='mb-4'>
               <DialogTitle>Add new log</DialogTitle>
             </DialogHeader>
@@ -113,15 +138,22 @@ export const NewLogDialog = ({
               <FormField
                 control={form.control}
                 name='description'
-                render={({ field }) => (
-                  <FormItem className='mb-4'>
+                render={({ field: { value, ref, ...field } }) => (
+                  <FormItem>
                     <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder='Put log description here'
-                        {...field}
-                      />
-                    </FormControl>
+                    <ForwardedEditor
+                      className={cn(
+                        'max-w-full rounded-2xl border [&_[role=combobox]]:rounded-sm [&_[role=combobox]]:bg-background [&_[role=toolbar]]:rounded-xl [&_[role=toolbar]]:bg-muted [&_[role=toolbar]]:text-muted-foreground dark:[&_[role=toolbar]]:bg-muted/50 [&_button[data-state=on]]:bg-background [&_option]:!bg-background [&_select]:!bg-background',
+                        resolvedTheme === 'dark' && 'dark-theme dark-editor',
+                        '[&_[role=toolbar]]:scrollbar [&_[role=toolbar]]:scrollbar-track-secondary [&_[role=toolbar]]:scrollbar-thumb-transparent [&_[role=toolbar]]:scrollbar-thumb-rounded-2xl [&_[role=toolbar]]:scrollbar-w-2 [&_[role=toolbar]]:scrollbar-h-2 [&_[role=toolbar]]:hover:scrollbar-thumb-primary/20',
+                      )}
+                      contentEditableClassName='prose dark:prose-invert max-w-full'
+                      ref={mergeRefs([ref, editorRef])}
+                      diffMarkdown={''}
+                      markdown={value}
+                      placeholder='Describe your product...'
+                      {...field}
+                    />
                     <FormMessage />
                   </FormItem>
                 )}

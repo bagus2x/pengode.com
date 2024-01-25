@@ -1,6 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { PageRequest } from '@pengode/common/dtos'
-import { Product, Status } from '@pengode/product/product'
 import { Transform } from 'class-transformer'
 import {
   ArrayUnique,
@@ -15,6 +13,12 @@ import {
   MaxLength,
   NotEquals,
 } from 'class-validator'
+
+import { PageRequest } from '@pengode/common/dtos'
+import { CategoryResponse } from '@pengode/product-category/product-category.dto'
+import { LogResponse } from '@pengode/product-log/product-log.dto'
+import { Product, Status } from '@pengode/product/product'
+import { UserResponse } from '@pengode/user/user.dto'
 
 export class CreateProductRequest {
   @IsNotEmpty()
@@ -51,31 +55,6 @@ export class CreateProductRequest {
 
 export class UpdateProductRequest extends CreateProductRequest {}
 
-export class CategoryResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  name: string
-}
-
-export class OwnerResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  email: string
-
-  @ApiProperty()
-  username: string
-
-  @ApiProperty()
-  name: string
-
-  @ApiProperty()
-  photo?: string | null
-}
-
 export class ProductResponse {
   @ApiProperty()
   id: number
@@ -102,7 +81,19 @@ export class ProductResponse {
   categories: CategoryResponse[]
 
   @ApiProperty()
-  owner: OwnerResponse
+  owner: UserResponse
+
+  @ApiProperty()
+  logs: Omit<LogResponse, 'product'>[]
+
+  @ApiProperty()
+  totalRatings: number
+
+  @ApiProperty()
+  numberOfRatings: number
+
+  @ApiProperty()
+  numberOfBuyers: number
 
   @ApiProperty()
   createdAt: Date
@@ -114,19 +105,16 @@ export class ProductResponse {
       description: product.description,
       previewUrl: product.previewUrl,
       price: product.price.toString(),
-      categories: product.categories.map((category) => ({
-        id: category.id,
-        name: category.name,
-      })),
+      categories: product.categories
+        ? product.categories.map(CategoryResponse.create)
+        : undefined,
       status: product.status,
       discount: product.discount,
-      owner: {
-        id: product.owner.id,
-        email: product.owner.email,
-        username: product.owner.username,
-        name: product.owner.name,
-        photo: product.owner.photo,
-      },
+      owner: product.owner ? UserResponse.create(product.owner) : undefined,
+      logs: product.logs ? product.logs.map(LogResponse.create) : undefined,
+      totalRatings: product.totalRatings,
+      numberOfRatings: product.numberOfRatings,
+      numberOfBuyers: product.numberOfBuyers,
       createdAt: product.createdAt,
     }
   }

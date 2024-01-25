@@ -63,7 +63,7 @@ export class ProductService {
         status: Status[req.status],
         totalRatings: 0,
         numberOfRatings: 0,
-        numberOfReviewers: 0,
+        numberOfBuyers: 0,
         categories,
         owner,
       })
@@ -89,6 +89,11 @@ export class ProductService {
       order: {
         id: 'DESC',
       },
+      relations: {
+        categories: true,
+        owner: true,
+        logs: true,
+      },
     })
 
     return {
@@ -101,6 +106,11 @@ export class ProductService {
   async findById(productId: number): Promise<ProductResponse> {
     const product = await this.productRepository.findOne({
       where: { id: productId },
+      relations: {
+        categories: true,
+        owner: true,
+        logs: true,
+      },
     })
     if (!product) {
       throw new NotFoundException('product is not found')

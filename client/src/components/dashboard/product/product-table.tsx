@@ -9,7 +9,7 @@ import { useState } from 'react'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { avatar } from '@pengode/common/utils'
+import { RupiahFormatter, avatar } from '@pengode/common/utils'
 import { TablePagination } from '@pengode/components/dashboard/product/table-pagination'
 import { TableToolbar } from '@pengode/components/dashboard/product/table-toolbar'
 import { Badge } from '@pengode/components/ui/badge'
@@ -89,6 +89,8 @@ export const ProductTable = ({ className }: PropsWithClassName) => {
                 <TableRow>
                   <TableHead className='w-[120px]'>Owner</TableHead>
                   <TableHead>Title</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Discount</TableHead>
                   <TableHead className='w-[140px]'>Created At</TableHead>
                   <TableHead className='w-[40px] text-right'> </TableHead>
                 </TableRow>
@@ -123,6 +125,12 @@ export const ProductTable = ({ className }: PropsWithClassName) => {
                       </Badge>
                       {product.title}
                     </TableCell>
+                    <TableCell>
+                      {RupiahFormatter.format(product.price)}
+                    </TableCell>
+                    <TableCell>
+                      {product.discount ? product.discount * 100 : 0}%
+                    </TableCell>
                     <TableCell className='text-sm'>
                       {dayjs(new Date(product.createdAt)).format(
                         'DD MMM YY HH:MM',
@@ -138,7 +146,6 @@ export const ProductTable = ({ className }: PropsWithClassName) => {
                         <DropdownMenuContent>
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-
                           <DropdownMenuItem asChild>
                             <Link
                               href={`/dashboard/product/editor?id=${product.id}`}>

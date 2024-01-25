@@ -1,10 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger'
 import { PageRequest } from '@pengode/common/dtos'
-import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoice-item'
+import { HistoryResponse } from '@pengode/product-invoice-history/product-invoice-history.dto'
+import { ItemResponse } from '@pengode/product-invoice-item/product-invoice-item.dto'
 import {
   ProductInvoice,
   Status,
 } from '@pengode/product-invoice/product-invoice'
+import { UserResponse } from '@pengode/user/user.dto'
 import { Expose, Transform } from 'class-transformer'
 import {
   ArrayUnique,
@@ -28,84 +30,6 @@ export class CreateInvoiceRequest {
   productIds: number[]
 }
 
-export class ProductResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  title: string
-
-  @ApiProperty()
-  previewUrl: string
-
-  @ApiProperty()
-  price: string
-
-  @ApiProperty()
-  discount?: number | null
-}
-
-export class CustomerResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  email: string
-
-  @ApiProperty()
-  username: string
-
-  @ApiProperty()
-  name: string
-
-  @ApiProperty()
-  photo: string
-}
-
-export class ItemResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  product: ProductResponse
-
-  @ApiProperty()
-  price: string
-
-  @ApiProperty()
-  discount?: number | null
-
-  @ApiProperty()
-  createdAt: Date
-
-  static create(item: ProductInvoiceItem): ItemResponse {
-    return {
-      id: item.id,
-      price: item.price.toString(),
-      discount: item.discount,
-      product: {
-        id: item.id,
-        title: item.product.title,
-        previewUrl: item.product.previewUrl,
-        price: item.product.price.toString(),
-        discount: item.product.discount,
-      },
-      createdAt: item.createdAt,
-    }
-  }
-}
-
-export class HistoryResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  status: Status
-
-  @ApiProperty()
-  createdAt: Date
-}
-
 export class InvoiceResponse {
   @ApiProperty()
   id: number
@@ -114,7 +38,7 @@ export class InvoiceResponse {
   status: Status
 
   @ApiProperty()
-  customer: CustomerResponse
+  customer: Omit<UserResponse, 'roles'>
 
   @ApiProperty()
   items: ItemResponse[]
@@ -129,7 +53,7 @@ export class InvoiceResponse {
   redirectUrl: string
 
   @ApiProperty()
-  histories: HistoryResponse[]
+  histories: Omit<HistoryResponse, 'invoiceId'>[]
 
   @ApiProperty()
   createdAt: Date
@@ -142,6 +66,7 @@ export class InvoiceResponse {
         id: invoice.customer.id,
         email: invoice.customer.email,
         username: invoice.customer.username,
+        phone: invoice.customer.phone,
         name: invoice.customer.name,
         photo: invoice.customer.photo,
       },

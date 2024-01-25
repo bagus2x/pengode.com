@@ -39,6 +39,9 @@ export class ProductInvoice {
   @Column({ length: 511 })
   redirectUrl: string
 
+  @Column({ nullable: true })
+  paidAt?: Date | null
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 

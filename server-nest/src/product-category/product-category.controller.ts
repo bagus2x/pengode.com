@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
+import { CategoryResponse } from '@pengode/article-category/article-category.dto'
 
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
 import { EveryRolesGuard } from '@pengode/auth/utils/roles-guard'
@@ -18,7 +19,6 @@ import {
   FindAllRequest,
 } from '@pengode/product-category/product-category.dto'
 import { ProductCategoryService } from '@pengode/product-category/product-category.service'
-import { CategoryResponse } from '@pengode/product/product.dto'
 
 @Controller()
 @ApiTags('Product Category')

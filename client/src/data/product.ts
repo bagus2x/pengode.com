@@ -32,6 +32,9 @@ export interface Product {
     name: string
     photo?: string | null
   }
+  totalRatings: number
+  numberOfRatings: number
+  numberOfBuyers: number
   createdAt: string
 }
 

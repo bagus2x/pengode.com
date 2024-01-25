@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
-import { LessThan, MoreThan, Repository } from 'typeorm'
+import { In, LessThan, MoreThan, Repository } from 'typeorm'
 
 import { InjectRepository } from '@nestjs/typeorm'
 import { PageResponse } from '@pengode/common/dtos'
@@ -49,6 +49,9 @@ export class ProductLogService {
         id: req.previousCursor
           ? MoreThan(req.previousCursor)
           : LessThan(req.nextCursor),
+        product: {
+          id: req.productIds ? In(req.productIds) : undefined,
+        },
       },
       take: req.size,
       order: {

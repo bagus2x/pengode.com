@@ -1,7 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator'
+
 import { PageRequest } from '@pengode/common/dtos'
 import { ProductCategory } from '@pengode/product-category/product-category'
-import { IsNotEmpty, IsOptional, MaxLength } from 'class-validator'
 
 export class CreateCategoryRequest {
   @IsNotEmpty()

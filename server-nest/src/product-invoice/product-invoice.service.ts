@@ -214,6 +214,7 @@ export class ProductInvoiceService {
         throw new ForbiddenException('signature key is invalid')
       }
 
+      const productRepository = entityManager.getRepository(Product)
       const productInvoiceRepository =
         entityManager.getRepository(ProductInvoice)
       const productInvoiceHistoryRepository = entityManager.getRepository(
@@ -222,19 +223,30 @@ export class ProductInvoiceService {
 
       const invoice = await productInvoiceRepository.findOne({
         where: { orderId: req.orderId },
+        relations: {
+          items: {
+            product: true,
+          },
+        },
       })
       if (!invoice) {
         throw new NotFoundException('invoice is not found')
       }
 
-      if (req.transactionStatus == 'capture') {
-        if (req.fraudStatus == 'accept') {
-          invoice.status = Status.PAID
-          invoice.paymentMethod = req.paymentType
-        }
-      } else if (req.transactionStatus == 'settlement') {
+      if (
+        (req.transactionStatus == 'capture' && req.fraudStatus == 'accept') ||
+        req.transactionStatus == 'settlement'
+      ) {
         invoice.status = Status.PAID
         invoice.paymentMethod = req.paymentType
+        invoice.paidAt = new Date()
+
+        await Promise.all(
+          invoice.items.map(async (item) => {
+            item.product.numberOfBuyers += 1
+            return await productRepository.save(item.product)
+          }),
+        )
       } else if (
         req.transactionStatus == 'cancel' ||
         req.transactionStatus == 'deny' ||

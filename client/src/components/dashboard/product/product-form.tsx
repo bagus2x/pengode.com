@@ -2,16 +2,30 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2Icon, PlusCircleIcon, PlusIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { forwardRef, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { mergeRefs } from 'react-merge-refs'
+import { toast } from 'sonner'
 import * as z from 'zod'
+import ReactMarkdown from 'react-markdown'
 
+import { restErrorMessages } from '@pengode/common/rest-client'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
+import { NewCategoryDialog } from '@pengode/components/dashboard/product/new-category-dialog'
+import { NewLogDialog } from '@pengode/components/dashboard/product/new-log-dialog'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@pengode/components/ui/accordion'
+import { useBlockUi } from '@pengode/components/ui/block-ui'
 import { Button } from '@pengode/components/ui/button'
 import {
   Card,
@@ -20,6 +34,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@pengode/components/ui/card'
+import { MultiSelect } from '@pengode/components/ui/combobox'
 import {
   Form,
   FormControl,
@@ -29,6 +44,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@pengode/components/ui/form'
+import { ImageUploader } from '@pengode/components/ui/image-uploader'
 import { Input } from '@pengode/components/ui/input'
 import {
   Select,
@@ -37,25 +53,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@pengode/components/ui/select'
-import { MultiSelect } from '@pengode/components/ui/combobox'
-import { ImageUploader } from '@pengode/components/ui/image-uploader'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { getCategories } from '@pengode/data/product-category'
-import { NewCategoryDialog } from '@pengode/components/dashboard/product/new-category-dialog'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { createProduct, getProduct, updateProduct } from '@pengode/data/product'
-import { useBlockUi } from '@pengode/components/ui/block-ui'
 import { upload } from '@pengode/data/cloudinary'
-import { toast } from 'sonner'
-import { restErrorMessages } from '@pengode/common/rest-client'
-import { NewLogDialog } from '@pengode/components/dashboard/product/new-log-dialog'
-import { getLogs } from '@pengode/data/product-log'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@pengode/components/ui/accordion'
+import { createProduct, getProduct, updateProduct } from '@pengode/data/product'
+import { getCategories } from '@pengode/data/product-category'
+import Link from 'next/link'
+import { Badge } from '@pengode/components/ui/badge'
 
 const formSchema = z.object({
   title: z.string().min(1).max(255),
@@ -164,11 +166,6 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
   })
   const pathname = usePathname()
   const router = useRouter()
-  const { data: logs, ...getLogsQuery } = useQuery({
-    queryKey: ['GET_PRODUCT_LOGS', product?.id],
-    queryFn: async () => getLogs(),
-    enabled: !!product?.id,
-  })
 
   useEffect(() => {
     if (getProductQUery.isLoading) blockUi.block()
@@ -245,6 +242,7 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
                       className={cn(
                         'max-w-full rounded-2xl border [&_[role=combobox]]:rounded-sm [&_[role=combobox]]:bg-background [&_[role=toolbar]]:rounded-xl [&_[role=toolbar]]:bg-muted [&_[role=toolbar]]:text-muted-foreground dark:[&_[role=toolbar]]:bg-muted/50 [&_button[data-state=on]]:bg-background [&_option]:!bg-background [&_select]:!bg-background',
                         resolvedTheme === 'dark' && 'dark-theme dark-editor',
+                        '[&_[role=toolbar]]:scrollbar [&_[role=toolbar]]:scrollbar-track-secondary [&_[role=toolbar]]:scrollbar-thumb-transparent [&_[role=toolbar]]:scrollbar-thumb-rounded-2xl [&_[role=toolbar]]:scrollbar-w-2 [&_[role=toolbar]]:scrollbar-h-2 [&_[role=toolbar]]:hover:scrollbar-thumb-primary/20',
                       )}
                       contentEditableClassName='prose dark:prose-invert max-w-full'
                       ref={mergeRefs([ref, editorRef])}
@@ -289,7 +287,7 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
                         <input
                           {...field}
                           type='number'
-                          className='w-full [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+                          className='w-full bg-transparent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
                         />
                       </div>
                     </FormControl>
@@ -413,12 +411,27 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div>{!logs?.items && 'No Release Available'}</div>
+          <div>{!product?.logs && 'No Release Available'}</div>
           <Accordion type='single' collapsible className='w-full'>
-            {logs?.items.map((log) => (
-              <AccordionItem key={log.id} value='item-1'>
-                <AccordionTrigger>{log.name}</AccordionTrigger>
-                <AccordionContent>{log.description}</AccordionContent>
+            {product?.logs?.map((log) => (
+              <AccordionItem key={log.id} value={`${log.id}`} className='group'>
+                <AccordionTrigger>
+                  <div className='me-4 flex w-full justify-between'>
+                    {log.name}{' '}
+                    <Badge
+                      variant='secondary'
+                      className='opacity-0 transition-all duration-500 group-hover:opacity-100'>
+                      <Link href={log.productUrl} className='no-underline'>
+                        URL
+                      </Link>
+                    </Badge>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <ReactMarkdown className='prose mx-auto mb-4 w-full max-w-screen-xl'>
+                    {log.description}
+                  </ReactMarkdown>
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

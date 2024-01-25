@@ -13,6 +13,7 @@ import {
 
 import { PageRequest } from '@pengode/common/dtos'
 import { ProductLog } from '@pengode/product-log/product-log'
+import { ProductResponse } from '@pengode/product/product.dto'
 
 export class CreateLogRequest {
   @IsString()
@@ -39,23 +40,6 @@ export class CreateLogRequest {
 
 export class UpdateLogRequest extends CreateLogRequest {}
 
-export class ProductResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  title: string
-
-  @ApiProperty()
-  previewUrl: string
-
-  @ApiProperty()
-  price: string
-
-  @ApiProperty()
-  discount?: number | null
-}
-
 export class LogResponse {
   @ApiProperty()
   id: number
@@ -70,7 +54,7 @@ export class LogResponse {
   description: string
 
   @ApiProperty()
-  product: ProductResponse
+  product?: ProductResponse
 
   @ApiProperty()
   createdAt: Date
@@ -82,13 +66,7 @@ export class LogResponse {
     return {
       id: log.id,
       name: log.name,
-      product: {
-        id: log.product.id,
-        previewUrl: log.product.previewUrl,
-        price: log.product.price.toString(),
-        title: log.product.title,
-        discount: log.product.discount,
-      },
+      product: log.product ? ProductResponse.create(log.product) : undefined,
       description: log.description,
       productUrl: log.productUrl,
       createdAt: log.createdAt,
@@ -104,5 +82,5 @@ export class FindAllRequest extends PageRequest {
   @IsNumber({}, { each: true })
   @Transform(({ value }) => (typeof value === 'string' ? [value] : value))
   @ApiProperty()
-  invoiceIds?: number[]
+  productIds?: number[]
 }
