@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
 import {
   HeartIcon,
@@ -14,18 +14,18 @@ import { useRouter } from 'next/navigation'
 import { PropsWithChildren } from 'react'
 import { toast } from 'sonner'
 
+import { restErrorMessages } from '@pengode/common/rest-client'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { RupiahFormatter, avatar } from '@pengode/common/utils'
 import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
 import { Button } from '@pengode/components/ui/button'
 import { Input } from '@pengode/components/ui/input'
+import { Progress } from '@pengode/components/ui/progress'
 import { Separator } from '@pengode/components/ui/separator'
 import { Product } from '@pengode/data/product'
+import { addProduct } from '@pengode/data/product-cart'
 import { createInvoice } from '@pengode/data/product-invoice'
-import { Progress } from '@pengode/components/ui/progress'
-import { restErrorMessages } from '@pengode/common/rest-client'
-import { useCart } from '@pengode/components/main/use-cart'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -39,7 +39,8 @@ export const ProductDetail = ({
 }: ProductDetailProps) => {
   const router = useRouter()
   const createInvoiceMutation = useMutation({ mutationFn: createInvoice })
-  const cart = useCart()
+  const queryClient = useQueryClient()
+  const cartMutation = useMutation({ mutationFn: addProduct })
 
   const handleCreateInvoice = () => {
     createInvoiceMutation.mutate(
@@ -59,8 +60,22 @@ export const ProductDetail = ({
   }
 
   const handleAddToCart = () => {
-    cart.add(product)
-    toast.success(`${product.title} has been added to cart`)
+    cartMutation.mutate(
+      { productId: product.id },
+      {
+        onSuccess: async () => {
+          await queryClient.invalidateQueries({
+            queryKey: ['GET_PRODUCT_CART'],
+          })
+          toast.success(`${product.title} has been added to cart`)
+        },
+        onError: (err) => {
+          restErrorMessages(err).forEach((message) => {
+            toast.error(message)
+          })
+        },
+      },
+    )
   }
 
   return (
@@ -148,7 +163,11 @@ export const ProductDetail = ({
               variant='outline'
               size='sm'
               onClick={handleAddToCart}
-              className='mb-4 w-full'>
+              className='mb-4 w-full'
+              disabled={cartMutation.isPending}>
+              {cartMutation.isPending && (
+                <Loader2Icon size={16} className='me-2 animate-spin' />
+              )}
               + Add to cart
             </Button>
             <Button variant='outline' size='circle-sm' className='shrink-0'>
