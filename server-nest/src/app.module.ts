@@ -27,7 +27,9 @@ import { Role } from '@pengode/role/role'
 import { RoleModule } from '@pengode/role/role.module'
 import { User } from '@pengode/user/user'
 import { UserModule } from '@pengode/user/user.module'
-import { ProductInvoiceItemModule } from './product-invoice-item/product-invoice-item.module'
+import { ProductInvoiceItemModule } from '@pengode/product-invoice-item/product-invoice-item.module'
+import { ProductCartModule } from '@pengode/product-cart/product-cart.module'
+import { ProductCart } from '@pengode/product-cart/product-cart'
 
 @Global()
 @Module({
@@ -55,6 +57,7 @@ import { ProductInvoiceItemModule } from './product-invoice-item/product-invoice
           ProductInvoice,
           ProductInvoiceItem,
           ProductInvoiceHistory,
+          ProductCart,
         ],
         synchronize: true,
         logging: true,
@@ -94,6 +97,7 @@ import { ProductInvoiceItemModule } from './product-invoice-item/product-invoice
     ProductInvoiceModule,
     ProductInvoiceHistoryModule,
     ProductInvoiceItemModule,
+    ProductCartModule,
   ],
 })
 export class AppModule {}
