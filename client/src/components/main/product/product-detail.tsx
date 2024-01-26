@@ -2,7 +2,13 @@
 
 import { useMutation } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
-import { HeartIcon, Loader2Icon, Share2Icon, StarIcon } from 'lucide-react'
+import {
+  HeartIcon,
+  Loader2Icon,
+  MailIcon,
+  Share2Icon,
+  StarIcon,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PropsWithChildren } from 'react'
@@ -10,7 +16,7 @@ import { toast } from 'sonner'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { RupiahFormatter } from '@pengode/common/utils'
+import { RupiahFormatter, avatar } from '@pengode/common/utils'
 import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
 import { Button } from '@pengode/components/ui/button'
 import { Input } from '@pengode/components/ui/input'
@@ -18,6 +24,7 @@ import { Separator } from '@pengode/components/ui/separator'
 import { Product } from '@pengode/data/product'
 import { createInvoice } from '@pengode/data/product-invoice'
 import { Progress } from '@pengode/components/ui/progress'
+import { restErrorMessages } from '@pengode/common/rest-client'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -41,7 +48,7 @@ export const ProductDetail = ({
           toast.success('Invoice created')
         },
         onError: (err) => {
-          err.message.split(', ').forEach((message) => {
+          restErrorMessages(err).forEach((message) => {
             toast.error(message)
           })
         },
@@ -67,6 +74,27 @@ export const ProductDetail = ({
             className='h-full w-full object-cover'
           />
         </AspectRatio>
+        <div className='flex gap-2'>
+          <Button size='sm'>Preview</Button>
+          <Button size='sm'>Hire us!</Button>
+          <div className='flex-1' />
+          <div className='flex'>
+            <Image
+              src={avatar(product.owner.username, product.owner.photo)}
+              width={32}
+              height={32}
+              alt={product.owner.name}
+              className='me-2 h-8 w-8 shrink-0 rounded-full'
+            />
+            <div className='flex flex-col text-xs'>
+              <span className='font-semibold'>{product.owner.name}</span>
+              <button className='flex flex-row items-center text-[10px]'>
+                <MailIcon className='me-1 h-3 w-3 text-muted-foreground' />
+                Contact
+              </button>
+            </div>
+          </div>
+        </div>
         <div className='min-w-0 max-w-full flex-1 rounded-2xl border border-border bg-background p-4'>
           <h1 className='mb-4 scroll-m-20 text-2xl font-semibold tracking-tight'>
             {product.title}
