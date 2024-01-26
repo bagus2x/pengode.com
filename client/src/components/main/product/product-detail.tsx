@@ -25,6 +25,7 @@ import { Product } from '@pengode/data/product'
 import { createInvoice } from '@pengode/data/product-invoice'
 import { Progress } from '@pengode/components/ui/progress'
 import { restErrorMessages } from '@pengode/common/rest-client'
+import { useCart } from '@pengode/components/main/use-cart'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -38,6 +39,7 @@ export const ProductDetail = ({
 }: ProductDetailProps) => {
   const router = useRouter()
   const createInvoiceMutation = useMutation({ mutationFn: createInvoice })
+  const cart = useCart()
 
   const handleCreateInvoice = () => {
     createInvoiceMutation.mutate(
@@ -54,6 +56,11 @@ export const ProductDetail = ({
         },
       },
     )
+  }
+
+  const handleAddToCart = () => {
+    cart.add(product)
+    toast.success(`${product.title} has been added to cart`)
   }
 
   return (
@@ -137,7 +144,11 @@ export const ProductDetail = ({
           </Button>
           <Separator className='mb-4' />
           <div className='flex gap-2'>
-            <Button variant='outline' size='sm' className='mb-4 w-full'>
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleAddToCart}
+              className='mb-4 w-full'>
               + Add to cart
             </Button>
             <Button variant='outline' size='circle-sm' className='shrink-0'>

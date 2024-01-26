@@ -18,7 +18,7 @@ import { useEffect, useState } from 'react'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { avatar } from '@pengode/common/utils'
+import { RupiahFormatter, avatar } from '@pengode/common/utils'
 import { Button } from '@pengode/components/ui/button'
 import {
   CommandDialog,
@@ -41,11 +41,14 @@ import {
 } from '@pengode/components/ui/dropdown-menu'
 import { signOut } from '@pengode/data/auth'
 import Link from 'next/link'
+import { useCart } from '@pengode/components/main/use-cart'
+import Decimal from 'decimal.js'
 
 export function Navbar({ className }: PropsWithClassName) {
   const session = useSession()
   const [openCommand, setOpenCommand] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
+  const cart = useCart()
 
   useEffect(() => {
     if (!session.data?.user) session.update()
@@ -75,6 +78,62 @@ export function Navbar({ className }: PropsWithClassName) {
           readOnly
           onClick={() => setOpenCommand(true)}
         />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className='relative outline-none'>
+              <ShoppingCartIcon className='text-muted-foreground' />
+              {!!cart.products.length && (
+                <span className='absolute -end-2 -top-2 grid aspect-square h-5 w-5 place-items-center rounded-full bg-green-500 text-xs text-white'>
+                  {cart.products.length}
+                </span>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className='md:w-96'>
+            <DropdownMenuLabel className='flex justify-between gap-4'>
+              <div>Your shopping cart</div>
+              <Link href='/cart' className='text-primary'>
+                See all
+              </Link>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                {!cart.products.length && (
+                  <p className='w-full text-center'>Empty</p>
+                )}
+              </DropdownMenuItem>
+              {cart.products.map((product) => (
+                <DropdownMenuItem key={product.id}>
+                  <Image
+                    src={product.previewUrl}
+                    alt={product.title}
+                    width={100}
+                    height={100}
+                    className='me-4 h-10 w-10 rounded'
+                  />
+                  <span className='me-4 line-clamp-2 flex-1'>
+                    {product.title}
+                  </span>
+                  <div className='ml-auto flex flex-col text-xs tracking-widest'>
+                    <span className='font-semibold'>
+                      {RupiahFormatter.format(
+                        new Decimal(product.price).sub(
+                          new Decimal(product.price).times(
+                            product.discount || 0,
+                          ),
+                        ),
+                      )}
+                    </span>
+                    <span className='scale-90 text-muted-foreground line-through'>
+                      {RupiahFormatter.format(product.price)}
+                    </span>
+                  </div>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className='outline-none'>
@@ -117,17 +176,6 @@ export function Navbar({ className }: PropsWithClassName) {
             </Button>
           </div>
         )}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className='outline-none'>
-              <ShoppingCartIcon className='text-muted-foreground' />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Your shopping cart</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-          </DropdownMenuContent>
-        </DropdownMenu>
         {session.data?.user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
