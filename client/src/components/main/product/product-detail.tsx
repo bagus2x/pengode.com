@@ -1,22 +1,22 @@
 'use client'
 
+import { useMutation } from '@tanstack/react-query'
+import Decimal from 'decimal.js'
+import { HeartIcon, Loader2Icon, Share2Icon } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { PropsWithChildren } from 'react'
 import { toast } from 'sonner'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
+import { RupiahFormatter } from '@pengode/common/utils'
 import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
 import { Button } from '@pengode/components/ui/button'
 import { Input } from '@pengode/components/ui/input'
 import { Separator } from '@pengode/components/ui/separator'
 import { Product } from '@pengode/data/product'
 import { createInvoice } from '@pengode/data/product-invoice'
-import { useMutation } from '@tanstack/react-query'
-import { HeartIcon, Share2Icon } from 'lucide-react'
-import { PropsWithChildren } from 'react'
-import { RupiahFormatter } from '@pengode/common/utils'
-import Decimal from 'decimal.js'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -96,7 +96,13 @@ export const ProductDetail = ({
           )}
         </div>
         <Input readOnly placeholder='Coupon' className='mb-4' />
-        <Button className='w-full' onClick={handleCreateInvoice}>
+        <Button
+          className='w-full'
+          onClick={handleCreateInvoice}
+          disabled={createInvoiceMutation.isPending}>
+          {createInvoiceMutation.isPending && (
+            <Loader2Icon size={16} className='me-2 animate-spin' />
+          )}
           Buy
         </Button>
         <Separator className='mb-4' />
