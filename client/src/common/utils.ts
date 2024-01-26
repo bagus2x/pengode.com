@@ -22,6 +22,7 @@ export class RupiahFormat implements Intl.NumberFormat {
   private numberFormat = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
+    maximumFractionDigits: 0,
   })
 
   format(value: number | bigint | string | Decimal): string {
