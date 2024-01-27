@@ -75,6 +75,28 @@ export async function getProducts(req?: {
   return await withAuth(get)<Page<Product>>({ url })
 }
 
+export async function getBoughtProducts(req?: {
+  cursor?: Cursor
+  size?: number
+  search?: string
+  statuses?: ('VISIBLE' | 'INVISIBLE')[]
+}) {
+  const url = new URL(`${env('PENGODE_API_BASE_URL')}/user/bought-products`)
+  if (req?.cursor?.nextCursor)
+    url.searchParams.append('nextCursor', `${req.cursor?.nextCursor}`)
+  if (req?.cursor?.previousCursor)
+    url.searchParams.append('previousCursor', `${req.cursor?.previousCursor}`)
+  if (req?.size) url.searchParams.append('size', `${req.size}`)
+  if (req?.search) url.searchParams.append('search', req.search)
+  if (req?.statuses) {
+    req?.statuses.forEach((statusId) => {
+      url.searchParams.append('statuses', `${statusId}`)
+    })
+  }
+
+  return await withAuth(get)<Page<Product>>({ url })
+}
+
 export async function getProduct(productId: number) {
   return await withAuth(get)<Product>({
     url: `${env('PENGODE_API_BASE_URL')}/product/${productId}`,
