@@ -4,6 +4,7 @@ import {
   Get,
   Param,
   Patch,
+  Query,
   UseGuards,
 } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
@@ -29,7 +30,7 @@ export class ProductLikeController {
   @UseGuards(AccessTokenGuard)
   @ApiOkResponse({ type: PageResponse<ProductResponse> })
   findLikedProducts(
-    req: FindAllRequest,
+    @Query() req: FindAllRequest,
   ): Promise<PageResponse<ProductResponse>> {
     return this.productLikeService.findLikedProducts(req)
   }
