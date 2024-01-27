@@ -30,6 +30,8 @@ import { UserModule } from '@pengode/user/user.module'
 import { ProductInvoiceItemModule } from '@pengode/product-invoice-item/product-invoice-item.module'
 import { ProductCartModule } from '@pengode/product-cart/product-cart.module'
 import { ProductCart } from '@pengode/product-cart/product-cart'
+import { ProductLikeModule } from '@pengode/product-like/product-like.module'
+import { ProductLike } from '@pengode/product-like/product-like'
 
 @Global()
 @Module({
@@ -58,6 +60,7 @@ import { ProductCart } from '@pengode/product-cart/product-cart'
           ProductInvoiceItem,
           ProductInvoiceHistory,
           ProductCart,
+          ProductLike,
         ],
         synchronize: true,
         logging: true,
@@ -98,6 +101,7 @@ import { ProductCart } from '@pengode/product-cart/product-cart'
     ProductInvoiceHistoryModule,
     ProductInvoiceItemModule,
     ProductCartModule,
+    ProductLikeModule,
   ],
 })
 export class AppModule {}
