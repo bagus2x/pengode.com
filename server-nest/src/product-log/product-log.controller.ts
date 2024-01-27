@@ -7,15 +7,18 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common'
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
+
+import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
 import { PageResponse } from '@pengode/common/dtos'
 import {
   CreateLogRequest,
   FindAllRequest,
   LogResponse,
 } from '@pengode/product-log/product-log.dto'
-import { ProductLogService } from './product-log.service'
+import { ProductLogService } from '@pengode/product-log/product-log.service'
 
 @Controller()
 @ApiTags('Product Log')
@@ -24,6 +27,7 @@ export class ProductLogController {
 
   @Post('/product-log')
   @HttpCode(201)
+  @UseGuards(AccessTokenGuard)
   @ApiCreatedResponse({ type: LogResponse })
   create(@Body() req: CreateLogRequest): Promise<LogResponse> {
     return this.productLogService.create(req)

@@ -11,7 +11,6 @@ import {
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
 import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
-import { EveryRolesGuard } from '@pengode/auth/utils/roles-guard'
 import { PageResponse } from '@pengode/common/dtos'
 import {
   CreateInvoiceRequest,
@@ -27,7 +26,7 @@ export class ProductInvoiceController {
   constructor(private readonly productInvoiceService: ProductInvoiceService) {}
 
   @Post('/product-invoice')
-  @UseGuards(AccessTokenGuard, EveryRolesGuard('ADMIN'))
+  @UseGuards(AccessTokenGuard)
   @HttpCode(201)
   @ApiOkResponse({ type: InvoiceResponse })
   create(@Body() req: CreateInvoiceRequest): Promise<InvoiceResponse> {
@@ -35,6 +34,7 @@ export class ProductInvoiceController {
   }
 
   @Get('/product-invoices')
+  @UseGuards(AccessTokenGuard)
   @ApiOkResponse({ type: Array<InvoiceResponse> })
   findAll(
     @Query() req: FindAllRequest,
@@ -43,6 +43,7 @@ export class ProductInvoiceController {
   }
 
   @Get('/product-invoice/:invoiceId')
+  @UseGuards(AccessTokenGuard)
   @ApiOkResponse({ type: InvoiceResponse })
   findById(@Param('invoiceId') invoiceId: number): Promise<InvoiceResponse> {
     return this.productInvoiceService.findById(invoiceId)

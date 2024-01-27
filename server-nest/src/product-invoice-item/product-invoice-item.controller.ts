@@ -1,6 +1,7 @@
-import { Controller, Get, Query } from '@nestjs/common'
+import { Controller, Get, Query, UseGuards } from '@nestjs/common'
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger'
 
+import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
 import { PageResponse } from '@pengode/common/dtos'
 import {
   FindAllRequest,
@@ -16,6 +17,7 @@ export class ProductInvoiceItemController {
   ) {}
 
   @Get('/product-invoice-items')
+  @UseGuards(AccessTokenGuard)
   @ApiOkResponse({ type: Array<ItemResponse> })
   findAll(@Query() req: FindAllRequest): Promise<PageResponse<ItemResponse>> {
     return this.productInvoiceItemService.findAll(req)
