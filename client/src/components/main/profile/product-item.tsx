@@ -1,18 +1,16 @@
+import Image from 'next/image'
+import Link from 'next/link'
+
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { avatar } from '@pengode/common/utils'
 import { Product } from '@pengode/data/product'
-import Image from 'next/image'
-import Link from 'next/link'
 
-export type BoughtProductItemProps = PropsWithClassName & {
+export type ProductItemProps = PropsWithClassName & {
   product: Product
 }
 
-export const BoughtProductItem = ({
-  className,
-  product,
-}: BoughtProductItemProps) => {
+export const ProductItem = ({ className, product }: ProductItemProps) => {
   return (
     <Link
       href={`/product/${product.id}`}

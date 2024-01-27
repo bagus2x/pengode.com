@@ -12,6 +12,7 @@ import {
 } from '@pengode/components/ui/tabs'
 import { getAuthUser } from '@pengode/data/user'
 import { BoughtProductList } from '@pengode/components/main/profile/bought-product-list'
+import { LikedProductList } from '@pengode/components/main/profile/liked-product-list'
 
 export const metadata: Metadata = {
   title: 'My profile',
@@ -61,15 +62,15 @@ export default async function ProfilePage() {
           <Tabs defaultValue='bought' className='w-full'>
             <TabsList className='w-full'>
               <TabsTrigger value='bought'>Bought</TabsTrigger>
-              <TabsTrigger value='favorites'>Favorites</TabsTrigger>
+              <TabsTrigger value='likes'>Likes</TabsTrigger>
               <TabsTrigger value='invoices'>Invoices</TabsTrigger>
               <TabsTrigger value='reviews'>Reviews</TabsTrigger>
             </TabsList>
             <TabsContent value='bought'>
               <BoughtProductList />
             </TabsContent>
-            <TabsContent value='favorites'>
-              Make changes to your account here.
+            <TabsContent value='likes'>
+              <LikedProductList />
             </TabsContent>
             <TabsContent value='invoices'>
               Make changes to your account here.

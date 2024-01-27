@@ -5,15 +5,15 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { ProductItem } from '@pengode/components/main/profile/product-item'
-import { getBoughtProducts } from '@pengode/data/product'
+import { getBoughtProducts, getLikedProducts } from '@pengode/data/product'
 
-export type BoughtProductListProps = PropsWithClassName & {}
+export type LikedProductListProps = PropsWithClassName & {}
 
-export const BoughtProductList = ({ className }: BoughtProductListProps) => {
+export const LikedProductList = ({ className }: LikedProductListProps) => {
   const { data: productPages } = useInfiniteQuery({
-    queryKey: ['GET_INFINITE_BOUGHT_PRODUCTS'],
+    queryKey: ['GET_INFINITE_LIKED_PRODUCTS'],
     queryFn: async ({ pageParam }) =>
-      await getBoughtProducts({ cursor: { nextCursor: pageParam } }),
+      await getLikedProducts({ cursor: { nextCursor: pageParam } }),
     initialPageParam: Math.pow(2, 31) - 1,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     getPreviousPageParam: (firstPage) => firstPage.previousCursor,
@@ -21,7 +21,7 @@ export const BoughtProductList = ({ className }: BoughtProductListProps) => {
 
   return (
     <div className={cn('flex flex-col gap-4 py-1', className)}>
-      <h6 className='text-lg font-semibold'>Bought Products 🖥️</h6>
+      <h6 className='text-lg font-semibold'>Liked Products 💖</h6>
       {productPages?.pages.map((page) =>
         page.items.map((product, index) => (
           <ProductItem key={index} product={product} className='w-full' />
