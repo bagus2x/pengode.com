@@ -5,6 +5,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import { Logger } from 'nestjs-pino'
 
 import { AppModule } from '@pengode/app.module'
 import { env } from '@pengode/common/utils'
@@ -13,8 +14,12 @@ async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
+    { bufferLogs: true },
   )
   app.setGlobalPrefix('/api/v1')
+
+  // Logger
+  app.useLogger(app.get(Logger))
 
   // Swagger
   const config = new DocumentBuilder()

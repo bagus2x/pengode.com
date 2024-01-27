@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config'
 import { TypeOrmModule } from '@nestjs/typeorm'
 import { redisStore } from 'cache-manager-redis-store'
 import { ClsModule } from 'nestjs-cls'
+import { LoggerModule } from 'nestjs-pino'
 
 import { ArticleCategory } from '@pengode/article-category/article-category'
 import { ArticleCategoryModule } from '@pengode/article-category/article-category.module'
@@ -37,6 +38,7 @@ import { ProductLike } from '@pengode/product-like/product-like'
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

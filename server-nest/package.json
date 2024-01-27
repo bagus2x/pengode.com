@@ -42,9 +42,11 @@
     "moment": "^2.30.1",
     "nanoid": "^3.3.7",
     "nestjs-cls": "^3.6.0",
+    "nestjs-pino": "^4.0.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pg": "^8.11.3",
+    "pino-http": "^9.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.19"
