@@ -96,6 +96,9 @@ export class ProductCartService {
           id: this.cls.get<number>('productId'),
         },
       },
+      relations: {
+        product: true,
+      },
     })
 
     await this.productCartRepository.remove(productCart)
