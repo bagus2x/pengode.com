@@ -96,9 +96,15 @@ export class ProductResponse {
   numberOfBuyers: number
 
   @ApiProperty()
+  numberOfLikes: number
+
+  @ApiProperty()
+  liked?: boolean
+
+  @ApiProperty()
   createdAt: Date
 
-  static create(product: Product): ProductResponse {
+  static create(product: Product & { liked?: boolean }): ProductResponse {
     return {
       id: product.id,
       title: product.title,
@@ -115,6 +121,8 @@ export class ProductResponse {
       totalRatings: product.totalRatings,
       numberOfRatings: product.numberOfRatings,
       numberOfBuyers: product.numberOfBuyers,
+      numberOfLikes: product.numberOfLikes,
+      liked: product.liked,
       createdAt: product.createdAt,
     }
   }

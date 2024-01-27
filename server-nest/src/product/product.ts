@@ -58,6 +58,9 @@ export class Product {
   @Column({ name: 'number_of_buyers' })
   numberOfBuyers: number
 
+  @Column({ name: 'number_of_likes' })
+  numberOfLikes: number
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 

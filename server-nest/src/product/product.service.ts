@@ -16,6 +16,7 @@ import {
   UpdateProductRequest,
 } from '@pengode/product/product.dto'
 import { User } from '@pengode/user/user'
+import { ProductLike } from '@pengode/product-like/product-like'
 
 @Injectable()
 export class ProductService {
@@ -26,6 +27,8 @@ export class ProductService {
     private readonly productRepository: Repository<Product>,
     @InjectRepository(ProductInvoiceItem)
     private readonly productInvoiceItemRepository: Repository<ProductInvoiceItem>,
+    @InjectRepository(ProductLike)
+    private readonly ProductLikeRepository: Repository<ProductLike>,
     private readonly clsService: ClsService,
   ) {}
 
@@ -68,6 +71,7 @@ export class ProductService {
         totalRatings: 0,
         numberOfRatings: 0,
         numberOfBuyers: 0,
+        numberOfLikes: 0,
         categories,
         owner,
       })
@@ -155,7 +159,24 @@ export class ProductService {
       throw new NotFoundException('product is not found')
     }
 
-    return ProductResponse.create(product)
+    const isLiked = await this.ProductLikeRepository.exists({
+      where: {
+        product: { id: productId },
+        user: {
+          id: this.clsService.get<number>('userId') || 0,
+        },
+      },
+    })
+    console.log(
+      'HASIL ' +
+        isLiked +
+        'prd ' +
+        productId +
+        'u id ' +
+        this.clsService.get<number>('userId'),
+    )
+
+    return ProductResponse.create({ ...product, liked: isLiked })
   }
 
   async update(

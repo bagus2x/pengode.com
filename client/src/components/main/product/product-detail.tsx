@@ -1,18 +1,13 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
-import {
-  HeartIcon,
-  Loader2Icon,
-  MailIcon,
-  Share2Icon,
-  StarIcon,
-} from 'lucide-react'
+import { Loader2Icon, MailIcon, Share2Icon, StarIcon } from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PropsWithChildren } from 'react'
 import { toast } from 'sonner'
+import { Heart as HeartIcon } from 'iconsax-react'
 
 import { restErrorMessages } from '@pengode/common/rest-client'
 import { cn } from '@pengode/common/tailwind'
@@ -23,7 +18,7 @@ import { Button } from '@pengode/components/ui/button'
 import { Input } from '@pengode/components/ui/input'
 import { Progress } from '@pengode/components/ui/progress'
 import { Separator } from '@pengode/components/ui/separator'
-import { Product } from '@pengode/data/product'
+import { Product, addLike, getProduct, removeLike } from '@pengode/data/product'
 import { addProduct } from '@pengode/data/product-cart'
 import { createInvoice } from '@pengode/data/product-invoice'
 
@@ -35,12 +30,22 @@ export type ProductDetailProps = PropsWithClassName &
 export const ProductDetail = ({
   className,
   children,
-  product,
+  product: initialProduct,
 }: ProductDetailProps) => {
+  const { data: product } = useQuery({
+    queryKey: ['GET_PRODUCT', initialProduct.id],
+    queryFn: async () => await getProduct(initialProduct.id),
+    initialData: initialProduct,
+  })
   const router = useRouter()
   const createInvoiceMutation = useMutation({ mutationFn: createInvoice })
   const queryClient = useQueryClient()
   const cartMutation = useMutation({ mutationFn: addProduct })
+  const toggleLikeMutation = useMutation<Product, Error, Product>({
+    mutationFn: (product) => {
+      return product.liked ? removeLike(product.id) : addLike(product.id)
+    },
+  })
 
   const handleCreateInvoice = () => {
     createInvoiceMutation.mutate(
@@ -78,6 +83,27 @@ export const ProductDetail = ({
     )
   }
 
+  const handleToggleLike = () => {
+    toggleLikeMutation.mutate(product, {
+      onSuccess: async (product) => {
+        await queryClient.invalidateQueries({
+          queryKey: ['GET_PRODUCT', product.id],
+        })
+
+        if (product.liked) {
+          toast.success(`${product.title} has been liked`)
+        } else {
+          toast.success(`${product.title} has been removed from likes`)
+        }
+      },
+      onError: (err) => {
+        restErrorMessages(err).forEach((message) => {
+          toast.error(message)
+        })
+      },
+    })
+  }
+
   return (
     <section
       className={cn(
@@ -90,8 +116,8 @@ export const ProductDetail = ({
           className='h-full w-full overflow-hidden rounded-2xl'>
           <Image
             src={product.previewUrl}
-            width={800}
-            height={(3 / 2) * 800}
+            width={1280}
+            height={(3 / 2) * 1280}
             alt={product.title}
             className='h-full w-full object-cover'
           />
@@ -170,8 +196,19 @@ export const ProductDetail = ({
               )}
               + Add to cart
             </Button>
-            <Button variant='outline' size='circle-sm' className='shrink-0'>
-              <HeartIcon className='h-4 w-4 text-muted-foreground' />
+            <Button
+              onClick={handleToggleLike}
+              disabled={toggleLikeMutation.isPending}
+              variant='outline'
+              size='circle-sm'
+              className='shrink-0'>
+              <HeartIcon
+                variant={product.liked ? 'Bold' : 'Outline'}
+                className={cn(
+                  'h-4 w-4 text-muted-foreground',
+                  product.liked && 'text-pink-500',
+                )}
+              />
             </Button>
             <Button variant='outline' size='circle-sm' className='shrink-0'>
               <Share2Icon className='h-4 w-4 text-muted-foreground' />

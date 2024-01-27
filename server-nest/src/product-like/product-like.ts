@@ -3,19 +3,18 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
-  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  Unique,
 } from 'typeorm'
 
 import { Product } from '@pengode/product/product'
 import { User } from '@pengode/user/user'
 
 @Entity()
+@Unique(['user.id', 'product.id'])
 export class ProductLike {
-  @PrimaryColumn({ name: 'user_id' })
-  readonly userId: number
-
-  @PrimaryColumn({ name: 'product_id' })
-  readonly productId: number
+  @PrimaryGeneratedColumn()
+  id: number
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id', referencedColumnName: 'id' })
@@ -26,5 +25,5 @@ export class ProductLike {
   readonly product: Product
 
   @CreateDateColumn({ name: 'created_at' })
-  readonly date: Date
+  readonly createdAt: Date
 }

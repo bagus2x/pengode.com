@@ -52,6 +52,7 @@ export class ProductController {
   }
 
   @Get('/product/:productId')
+  @UseGuards(AccessTokenGuard)
   @ApiOkResponse({ type: ProductResponse })
   findById(@Param('productId') productId: number): Promise<ProductResponse> {
     return this.productService.findById(productId)

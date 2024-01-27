@@ -1,6 +1,13 @@
 'use server'
 
-import { get, post, put, withAuth } from '@pengode/common/rest-client'
+import {
+  del,
+  get,
+  patch,
+  post,
+  put,
+  withAuth,
+} from '@pengode/common/rest-client'
 import { env } from '@pengode/common/utils'
 import { Cursor, Page } from '@pengode/data/types'
 
@@ -35,6 +42,7 @@ export interface Product {
   totalRatings: number
   numberOfRatings: number
   numberOfBuyers: number
+  liked?: boolean
   createdAt: string
 }
 
@@ -100,6 +108,18 @@ export async function getBoughtProducts(req?: {
 export async function getProduct(productId: number) {
   return await withAuth(get)<Product>({
     url: `${env('PENGODE_API_BASE_URL')}/product/${productId}`,
+  })
+}
+
+export async function addLike(productId: number) {
+  return await withAuth(patch)<Product>({
+    url: `${env('PENGODE_API_BASE_URL')}/product/${productId}/like`,
+  })
+}
+
+export async function removeLike(productId: number) {
+  return await withAuth(del)<Product>({
+    url: `${env('PENGODE_API_BASE_URL')}/product/${productId}/like`,
   })
 }
 
