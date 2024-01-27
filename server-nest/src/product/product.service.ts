@@ -1,9 +1,13 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 import Decimal from 'decimal.js'
+import { ClsService } from 'nestjs-cls'
 import { DataSource, In, LessThan, MoreThan, Raw, Repository } from 'typeorm'
 
+import { PageResponse } from '@pengode/common/dtos'
 import { ProductCategory } from '@pengode/product-category/product-category'
+import { ProductInvoiceItem } from '@pengode/product-invoice-item/product-invoice-item'
+import { Status as InvoiceStatus } from '@pengode/product-invoice/product-invoice'
 import { Product, Status } from '@pengode/product/product'
 import {
   CreateProductRequest,
@@ -11,9 +15,7 @@ import {
   ProductResponse,
   UpdateProductRequest,
 } from '@pengode/product/product.dto'
-import { PageResponse } from '@pengode/common/dtos'
 import { User } from '@pengode/user/user'
-import { ClsService } from 'nestjs-cls'
 
 @Injectable()
 export class ProductService {
@@ -22,6 +24,8 @@ export class ProductService {
     private readonly dataSource: DataSource,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
+    @InjectRepository(ProductInvoiceItem)
+    private readonly productInvoiceItemRepository: Repository<ProductInvoiceItem>,
     private readonly clsService: ClsService,
   ) {}
 
@@ -100,6 +104,41 @@ export class ProductService {
       items: products.map(ProductResponse.create),
       previousCursor: products[0]?.id || 0,
       nextCursor: products[products.length - 1]?.id || 0,
+    }
+  }
+
+  async findBoughtProducts(
+    req: FindAllRequest,
+  ): Promise<PageResponse<ProductResponse>> {
+    const invoiceItems = await this.productInvoiceItemRepository.find({
+      where: {
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
+        product: {
+          status: req.statuses ? In(req.statuses) : undefined,
+          title: req.search
+            ? Raw((alias) => `LOWER(${alias}) LIKE '%${req.search}%'`)
+            : undefined,
+        },
+        invoice: {
+          status: InvoiceStatus.PAID,
+          customer: {
+            id: this.clsService.get<number>('userId'),
+          },
+        },
+      },
+      relations: {
+        product: {
+          owner: true,
+        },
+      },
+    })
+
+    return {
+      items: invoiceItems.map((item) => ProductResponse.create(item.product)),
+      previousCursor: invoiceItems[0]?.id || 0,
+      nextCursor: invoiceItems[invoiceItems.length - 1]?.id || 0,
     }
   }
 

@@ -42,6 +42,15 @@ export class ProductController {
     return this.productService.findAll(req)
   }
 
+  @Get('/user/bought-products')
+  @UseGuards(AccessTokenGuard)
+  @ApiOkResponse({ type: Array<ProductResponse> })
+  findBoughtProducts(
+    @Query() req: FindAllRequest,
+  ): Promise<PageResponse<ProductResponse>> {
+    return this.productService.findBoughtProducts(req)
+  }
+
   @Get('/product/:productId')
   @ApiOkResponse({ type: ProductResponse })
   findById(@Param('productId') productId: number): Promise<ProductResponse> {
