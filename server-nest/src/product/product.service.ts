@@ -167,14 +167,6 @@ export class ProductService {
         },
       },
     })
-    console.log(
-      'HASIL ' +
-        isLiked +
-        'prd ' +
-        productId +
-        'u id ' +
-        this.clsService.get<number>('userId'),
-    )
 
     return ProductResponse.create({ ...product, liked: isLiked })
   }

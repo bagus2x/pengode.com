@@ -10,7 +10,11 @@ import {
   UseGuards,
 } from '@nestjs/common'
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger'
-import { AccessTokenGuard } from '@pengode/auth/utils/access-token-guard'
+
+import {
+  AccessTokenGuard,
+  OptionalAccessTokenGuard,
+} from '@pengode/auth/utils/access-token-guard'
 import { EveryRolesGuard } from '@pengode/auth/utils/roles-guard'
 import { PageResponse } from '@pengode/common/dtos'
 import {
@@ -19,7 +23,7 @@ import {
   ProductResponse,
   UpdateProductRequest,
 } from '@pengode/product/product.dto'
-import { ProductService } from './product.service'
+import { ProductService } from '@pengode/product/product.service'
 
 @Controller()
 @ApiTags('Product')
@@ -52,7 +56,7 @@ export class ProductController {
   }
 
   @Get('/product/:productId')
-  @UseGuards(AccessTokenGuard)
+  @UseGuards(OptionalAccessTokenGuard)
   @ApiOkResponse({ type: ProductResponse })
   findById(@Param('productId') productId: number): Promise<ProductResponse> {
     return this.productService.findById(productId)
