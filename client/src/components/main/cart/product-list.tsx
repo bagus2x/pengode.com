@@ -91,6 +91,9 @@ export const ProductList = ({ className, products }: ProductListProps) => {
         await queryClient.invalidateQueries({
           queryKey: ['GET_INFINITE_PRODUCT_CART'],
         })
+        await queryClient.invalidateQueries({
+          queryKey: ['GET_PRODUCT_CART'],
+        })
         setSelectedProduct([])
         toast.success(`${products.length} products are removed`)
       },
