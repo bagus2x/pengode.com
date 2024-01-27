@@ -1,5 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger'
+import { PageRequest } from '@pengode/common/dtos'
 import { User } from '@pengode/user/user'
+import { IsOptional } from 'class-validator'
+
+export class FindAllRequest extends PageRequest {
+  @IsOptional()
+  @ApiProperty()
+  search?: string
+}
 
 export class UserResponse {
   @ApiProperty()
@@ -8,14 +16,19 @@ export class UserResponse {
   @ApiProperty()
   email: string
 
+  @ApiProperty()
   username: string
 
+  @ApiProperty()
   phone?: string | null
 
+  @ApiProperty()
   name: string
 
+  @ApiProperty()
   photo: string
 
+  @ApiProperty()
   roles: { id: number; name: string }[]
 
   static create(user: User): UserResponse {
