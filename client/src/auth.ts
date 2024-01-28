@@ -19,6 +19,7 @@ declare module 'next-auth' {
       name: string
       email: string
       image?: string | null
+      roles: { id: number; name: string }[]
       accessToken: string
       refreshToken: string
     }
@@ -52,10 +53,11 @@ export const authConfig: NextAuthConfig = {
         })
 
         return {
-          name: res.user.name,
-          email: res.user.email,
-          image: res.user.photo,
           id: `${res.user.id}`,
+          email: res.user.email,
+          name: res.user.name,
+          image: res.user.photo,
+          roles: res.user.roles,
           accessToken: res.accessToken,
           refreshToken: res.refreshToken,
         }
@@ -73,11 +75,13 @@ export const authConfig: NextAuthConfig = {
       if (account?.provider === 'github' && account?.access_token) {
         const res = await github({ token: account.access_token })
         token.id = res.user.id
+        token.roles = res.user.roles
         token.accessToken = res.accessToken
         token.refreshToken = res.refreshToken
       } else if (account?.provider === 'google' && account.id_token) {
         const res = await google({ token: account.id_token })
         token.id = res.user.id
+        token.roles = res.user.roles
         token.accessToken = res.accessToken
         token.refreshToken = res.refreshToken
       } else if (
@@ -85,6 +89,7 @@ export const authConfig: NextAuthConfig = {
         (user as any).accessToken
       ) {
         token.id = parseInt(user.id!!)
+        token.roles = (user as any).roles
         token.accessToken = (user as any).accessToken
         token.refreshToken = (user as any).refreshToken
       }
@@ -103,6 +108,7 @@ export const authConfig: NextAuthConfig = {
     async session({ session, token }: any) {
       if (token && token.accessToken && token.refreshToken) {
         session.user.id = token.id
+        session.user.roles = token.roles
         session.user.accessToken = token.accessToken
         session.user.refreshToken = token.refreshToken
       }
