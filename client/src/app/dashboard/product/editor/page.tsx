@@ -1,9 +1,13 @@
+import { Suspense } from 'react'
+
 import { ProductForm } from '@pengode/components/dashboard/product/product-form'
 
-export default function NewPostPage() {
+export default function ProductFormPage() {
   return (
     <main>
-      <ProductForm className='px-4' />
+      <Suspense>
+        <ProductForm className='px-4' />
+      </Suspense>
     </main>
   )
 }

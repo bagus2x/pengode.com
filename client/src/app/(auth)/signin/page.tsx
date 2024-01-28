@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { SignInForm } from '@pengode/components/auth/signin-form'
 import { Astronaut } from '@pengode/components/ui/astronaut'
@@ -25,7 +26,9 @@ export default function SignInPage() {
         <p className='mb-8 text-muted-foreground'>
           Fill the data below to sign in
         </p>
-        <SignInForm className='w-full max-w-sm' />
+        <Suspense>
+          <SignInForm className='w-full max-w-sm' />
+        </Suspense>
       </div>
     </main>
   )

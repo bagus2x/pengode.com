@@ -1,9 +1,13 @@
+import { Suspense } from 'react'
+
 import { ArticleForm } from '@pengode/components/dashboard/article/article-form'
 
-export default function NewArticlePage() {
+export default function ArticleFormPage() {
   return (
     <main>
-      <ArticleForm className='px-4' />
+      <Suspense>
+        <ArticleForm className='px-4' />
+      </Suspense>
     </main>
   )
 }

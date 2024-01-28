@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 import { SignUpForm } from '@pengode/components/auth/signup-form'
 import { Astronaut } from '@pengode/components/ui/astronaut'
@@ -25,7 +26,9 @@ export default function SignUpPage() {
         <p className='mb-8 text-muted-foreground'>
           Fill the data below to sign up
         </p>
-        <SignUpForm className='w-full max-w-sm' />
+        <Suspense>
+          <SignUpForm className='w-full max-w-sm' />
+        </Suspense>
       </div>
     </main>
   )
