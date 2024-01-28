@@ -368,13 +368,9 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
             size={size}
             onChangeSize={setSize}
             length={articles?.items?.length}
-            disablePreviousPage={!articles || !articles?.previousCursor}
+            disablePreviousPage={false}
             onClickPreviousPage={handlePreviousCursor}
-            disableNextPage={
-              !articles ||
-              !articles.nextCursor ||
-              articles?.items?.length < size
-            }
+            disableNextPage={false}
             onClickNextPage={handleNextCursor}
             className='px-4'
           />

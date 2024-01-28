@@ -166,13 +166,9 @@ export const ProductTable = ({ className }: PropsWithClassName) => {
             size={size}
             onChangeSize={setSize}
             length={products?.items?.length}
-            disablePreviousPage={!products || !products?.previousCursor}
+            disablePreviousPage={false}
             onClickPreviousPage={handlePreviousCursor}
-            disableNextPage={
-              !products ||
-              !products.nextCursor ||
-              products?.items?.length < size
-            }
+            disableNextPage={false}
             onClickNextPage={handleNextCursor}
             className='px-4'
           />
