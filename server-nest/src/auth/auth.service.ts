@@ -64,21 +64,15 @@ export class AuthService {
 
     const tokens = await this.getTokens(newUser.id, newUser.username)
 
-    return {
-      user: {
-        id: newUser.id,
-        email: newUser.email,
-        username: newUser.username,
-        name: newUser.name,
-        photo: newUser.photo,
-      },
-      ...tokens,
-    }
+    return AuthResponse.create({ ...tokens, user: newUser })
   }
 
   async signIn(req: SignInRequest): Promise<AuthResponse> {
     const user = await this.userRepository.findOne({
       where: [{ email: req.username }, { username: req.username }],
+      relations: {
+        roles: true,
+      },
     })
     if (!user) {
       throw new NotFoundException('user does not exists')
@@ -91,16 +85,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.username)
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        photo: user.photo,
-      },
-      ...tokens,
-    }
+    return AuthResponse.create({ ...tokens, user })
   }
 
   async github(req: SocialRequest): Promise<AuthResponse> {
@@ -137,16 +122,12 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { email } })
     if (user) {
       const tokens = await this.getTokens(user.id, user.username)
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          name: user.name,
-          photo: user.photo,
-        },
-        ...tokens,
-      }
+      return AuthResponse.create({ ...tokens, user })
+    }
+
+    const role = await this.roleRepository.findOneBy({ name: 'USER' })
+    if (!role) {
+      throw new NotFoundException(`role user is not found`)
     }
 
     const createdUser = await this.userRepository.save({
@@ -154,22 +135,14 @@ export class AuthService {
       username: res.data.login,
       name: res.data.name,
       photo: res.data.avatar_url,
+      roles: [role],
     })
-    const tokens = await this.getTokens(user.id, user.username)
+    const tokens = await this.getTokens(createdUser.id, createdUser.username)
 
-    return {
-      user: {
-        id: createdUser.id,
-        email: createdUser.email,
-        username: createdUser.username,
-        name: createdUser.name,
-        photo: createdUser.photo,
-      },
-      ...tokens,
-    }
+    return AuthResponse.create({ ...tokens, user: createdUser })
   }
 
-  async google(req: SocialRequest) {
+  async google(req: SocialRequest): Promise<AuthResponse> {
     const res = await axios.get<{
       email: string
       name: string
@@ -184,16 +157,12 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { email } })
     if (user) {
       const tokens = await this.getTokens(user.id, user.username)
-      return {
-        user: {
-          id: user.id,
-          email: user.email,
-          username: user.username,
-          name: user.name,
-          photo: user.photo,
-        },
-        ...tokens,
-      }
+      return AuthResponse.create({ ...tokens, user })
+    }
+
+    const role = await this.roleRepository.findOneBy({ name: 'USER' })
+    if (!role) {
+      throw new NotFoundException(`role user is not found`)
     }
 
     const createdUser = await this.userRepository.save({
@@ -201,19 +170,12 @@ export class AuthService {
       username,
       name,
       photo,
+      roles: [role],
     })
-    const tokens = await this.getTokens(user.id, user.username)
 
-    return {
-      user: {
-        id: createdUser.id,
-        email: createdUser.email,
-        username: createdUser.username,
-        name: createdUser.name,
-        photo: createdUser.photo,
-      },
-      ...tokens,
-    }
+    const tokens = await this.getTokens(createdUser.id, createdUser.username)
+
+    return AuthResponse.create({ ...tokens, user: createdUser })
   }
 
   async signOut(): Promise<void> {
@@ -246,16 +208,7 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.username)
 
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        name: user.name,
-        photo: user.photo,
-      },
-      ...tokens,
-    }
+    return AuthResponse.create({ ...tokens, user })
   }
 
   private async getTokens(userId: number, username: string) {

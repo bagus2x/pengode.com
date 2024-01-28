@@ -1,5 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsNotEmpty, MaxLength, MinLength, IsEmail } from 'class-validator'
+import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator'
+
+import { User } from '@pengode/user/user'
+import { UserResponse } from '@pengode/user/user.dto'
 
 export class SignUpRequest {
   @IsNotEmpty()
@@ -36,23 +39,6 @@ export class SignInRequest {
   password: string
 }
 
-class UserResponse {
-  @ApiProperty()
-  id: number
-
-  @ApiProperty()
-  email: string
-
-  @ApiProperty()
-  username: string
-
-  @ApiProperty()
-  name: string
-
-  @ApiProperty()
-  photo: string
-}
-
 export class AuthResponse {
   @ApiProperty()
   accessToken: string
@@ -62,6 +48,22 @@ export class AuthResponse {
 
   @ApiProperty()
   user: UserResponse
+
+  static create({
+    accessToken,
+    refreshToken,
+    user,
+  }: {
+    accessToken: string
+    refreshToken: string
+    user: User
+  }): AuthResponse {
+    return {
+      accessToken,
+      refreshToken,
+      user: UserResponse.create(user),
+    }
+  }
 }
 
 export class SocialRequest {
