@@ -39,7 +39,7 @@ export class UserResponse {
       phone: user.phone,
       name: user.name,
       photo: user.phone,
-      roles: user.roles,
+      roles: user.roles.map((role) => ({ id: role.id, name: role.name })),
     }
   }
 }
