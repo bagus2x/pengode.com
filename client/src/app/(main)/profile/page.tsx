@@ -30,7 +30,7 @@ export default async function ProfilePage() {
       </h4>
       <div className='flex w-full flex-col items-start gap-4 md:flex-row'>
         <section className='w-full min-w-80 rounded-2xl border border-border bg-background p-4 md:max-w-96'>
-          <div className='mb-4 flex items-center gap-4'>
+          <div className='mb-4 flex min-w-0 items-center gap-4'>
             <Image
               src={avatar(user.username, user.photo)}
               width={320}
@@ -38,7 +38,7 @@ export default async function ProfilePage() {
               alt={user.name}
               className='h-24 w-24 rounded-full'
             />
-            <div className='flex w-full flex-col justify-items-center'>
+            <div className='flex w-full flex-1 flex-col justify-items-center truncate'>
               <h6 className='truncate font-semibold'>
                 {user.name}&nbsp;
                 <span className='text-xs text-muted-foreground'>
