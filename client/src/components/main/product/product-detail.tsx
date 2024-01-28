@@ -34,6 +34,7 @@ import {
 } from '@pengode/components/ui/alert'
 import Link from 'next/link'
 import { ReviewForm } from '@pengode/components/main/product/review-form'
+import dayjs from 'dayjs'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -263,7 +264,7 @@ export const ProductDetail = ({
             </Button>
           </div>
         </div>
-        <div className='flex flex-col gap-4 rounded-2xl border border-border bg-background p-4'>
+        <div className='mb-4 flex flex-col gap-4 rounded-2xl border border-border bg-background p-4'>
           <h4 className='mb-2 scroll-m-20 text-xl font-semibold tracking-tight'>
             Rating
           </h4>
@@ -336,6 +337,29 @@ export const ProductDetail = ({
             </Button>
           )}
         </div>
+        {product.paid && (
+          <div className='flex flex-col gap-4 rounded-2xl border border-border bg-background px-2 py-4'>
+            <h4 className='scroll-m-20 px-2 text-xl font-semibold tracking-tight'>
+              Versions
+            </h4>
+            <div className='flex flex-col gap-3'>
+              {product.logs.map((log) => (
+                <div
+                  key={log.id}
+                  className='flex items-center gap-4 rounded border-b border-border p-2 py-2 transition-all hover:bg-secondary'>
+                  <Link
+                    href={log.productUrl}
+                    className='flex-1 truncate text-sm'>
+                    {log.name}
+                  </Link>
+                  <span className='text-xs text-muted-foreground'>
+                    {dayjs(log.createdAt).format('DD MMM YYYY')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )
