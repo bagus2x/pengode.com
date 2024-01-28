@@ -9,50 +9,34 @@ import { RupiahFormatter } from '@pengode/common/utils'
 import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
 import { Badge } from '@pengode/components/ui/badge'
 import { Separator } from '@pengode/components/ui/separator'
+import { Product } from '@pengode/data/product'
 
 export type ProductItemProps = PropsWithClassName & {
-  id: number
-  title: string
-  previewUrl: string
-  categories: { id: number; name: string }[]
-  totalRatings: number
-  numberOfRatings: number
-  numberOfBuyers: number
-  price: string
-  discount?: number | null
+  product: Product
 }
 
-export const ProductItem = ({
-  id,
-  title,
-  previewUrl,
-  categories,
-  totalRatings,
-  numberOfRatings,
-  numberOfBuyers,
-  price,
-  discount,
-}: ProductItemProps) => {
+export const ProductItem = ({ className, product }: ProductItemProps) => {
   return (
     <Link
-      key={id}
-      href={`/product/${id}`}
+      href={`/product/${product.id}`}
       className={cn(
         'w-full cursor-pointer overflow-hidden rounded-2xl border border-border bg-background',
       )}>
       <AspectRatio ratio={3 / 2}>
         <Image
-          src={previewUrl}
+          src={product.previewUrl}
           width={400}
           height={(3 / 2) * 400}
-          alt={title}
+          alt={product.title}
           className='h-full w-full object-cover transition-all hover:scale-110'
         />
       </AspectRatio>
       <div className='p-4'>
-        <h6 className='truncate text-nowrap text-lg font-semibold'>{title}</h6>
+        <h6 className='truncate text-nowrap text-lg font-semibold'>
+          {product.title}
+        </h6>
         <div className='mb-4 flex flex-nowrap gap-2'>
-          {categories.map((category) => (
+          {product.categories.map((category) => (
             <Badge
               key={category.id}
               variant='secondary'
@@ -66,26 +50,37 @@ export const ProductItem = ({
           <div className='flex gap-2 text-xs'>
             <div className='flex gap-1 text-muted-foreground'>
               <StarIcon className='h-3 w-3' />
-              {totalRatings / numberOfRatings || 0}
+              {(product.numberOfOneStars * 1 +
+                product.numberOfTwoStars * 2 +
+                product.numberOfThreeStars * 3 +
+                product.numberOfFourStars * 4 +
+                product.numberOfFiveStars * 5) /
+                (product.numberOfOneStars +
+                  product.numberOfTwoStars +
+                  product.numberOfThreeStars +
+                  product.numberOfFourStars +
+                  product.numberOfFiveStars) || 0}
             </div>
             <div className='flex gap-1 text-muted-foreground'>
               <ShoppingCartIcon className='h-3 w-3' />
-              {numberOfBuyers}
+              {product.numberOfBuyers}
             </div>
           </div>
           <div className='flex flex-col items-end'>
             <div className='text-xs font-semibold'>
               {RupiahFormatter.format(
-                new Decimal(price).sub(new Decimal(price).times(discount || 0)),
+                new Decimal(product.price).sub(
+                  new Decimal(product.price).times(product.discount || 0),
+                ),
               )}
             </div>
-            {!!discount && (
+            {!!product.discount && (
               <div className='text-[10px]  text-muted-foreground'>
                 <span className='me-2 line-through'>
-                  {RupiahFormatter.format(price)}
+                  {RupiahFormatter.format(product.price)}
                 </span>
                 <span className='font-bold text-red-500'>
-                  {discount * 100}%
+                  {product.discount * 100}%
                 </span>
               </div>
             )}

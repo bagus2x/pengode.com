@@ -23,18 +23,7 @@ export const ProductList = ({ className }: ProductListProps) => {
       <div className='grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
         {productPages?.pages.map((page) =>
           page.items.map((product) => (
-            <ProductItem
-              key={product.id}
-              id={product.id}
-              title={product.title}
-              previewUrl={product.previewUrl}
-              categories={product.categories}
-              price={product.price}
-              discount={product.discount}
-              totalRatings={product.totalRatings}
-              numberOfRatings={product.numberOfRatings}
-              numberOfBuyers={product.numberOfBuyers}
-            />
+            <ProductItem key={product.id} product={product} />
           )),
         )}
       </div>
