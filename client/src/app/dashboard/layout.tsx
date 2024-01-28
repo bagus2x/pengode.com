@@ -16,7 +16,9 @@ export default function DashboardLayout({ children }: PropsWithChildren) {
   if (session.status === 'loading') {
     return (
       <div className='min-h-screen w-full'>
-        <Loader2Icon className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform animate-spin' />
+        <div className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform '>
+          <Loader2Icon className='animate-spin' />
+        </div>
       </div>
     )
   }
