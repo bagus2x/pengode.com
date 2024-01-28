@@ -1,7 +1,7 @@
 'use client'
 
+import Decimal from 'decimal.js'
 import {
-  CalendarIcon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
@@ -14,6 +14,7 @@ import {
 import { useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import { cn } from '@pengode/common/tailwind'
@@ -40,10 +41,9 @@ import {
   DropdownMenuTrigger,
 } from '@pengode/components/ui/dropdown-menu'
 import { signOut } from '@pengode/data/auth'
-import { getProducts } from '@pengode/data/product-cart'
-import { useQuery } from '@tanstack/react-query'
-import Decimal from 'decimal.js'
-import Link from 'next/link'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
+import { getProducts as getCartProducts } from '@pengode/data/product-cart'
+import { getProducts } from '@pengode/data/product'
 
 export function Navbar({ className }: PropsWithClassName) {
   const session = useSession()
@@ -51,9 +51,18 @@ export function Navbar({ className }: PropsWithClassName) {
   const { setTheme, resolvedTheme } = useTheme()
   const { data: products } = useQuery({
     queryKey: ['GET_PRODUCT_CART'],
-    queryFn: async () => await getProducts({ size: 6 }),
+    queryFn: async () => await getCartProducts({ size: 6 }),
     select: (data) => data.items,
     enabled: !!session.data,
+  })
+  const [search, setSearch] = useState('')
+  const { data: productPages } = useInfiniteQuery({
+    queryKey: ['GET_INFINITE_PRODUCTS', search],
+    queryFn: async ({ pageParam }) =>
+      await getProducts({ cursor: { nextCursor: pageParam }, search }),
+    initialPageParam: Math.pow(2, 31) - 1,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getPreviousPageParam: (firstPage) => firstPage.previousCursor,
   })
 
   useEffect(() => {
@@ -80,7 +89,7 @@ export function Navbar({ className }: PropsWithClassName) {
         <SearchIcon className='text-muted-foreground' />
         <input
           placeholder='Search (Ctrl + /)'
-          className='flex-1 bg-transparent text-sm outline-none'
+          className='min-w-0 flex-1 bg-transparent text-sm outline-none'
           readOnly
           onClick={() => setOpenCommand(true)}
         />
@@ -225,27 +234,34 @@ export function Navbar({ className }: PropsWithClassName) {
           </DropdownMenu>
         )}
       </div>
-      <CommandDialog open={openCommand} onOpenChange={setOpenCommand}>
-        <CommandInput placeholder='Type a command or search...' />
+      <CommandDialog
+        open={openCommand}
+        onOpenChange={setOpenCommand}
+        shouldFilter={false}>
+        <CommandInput
+          placeholder='Type a command or search...'
+          onValueChange={setSearch}
+        />
         <CommandList className='scrollbar-thin'>
           <CommandEmpty>No results found.</CommandEmpty>
-          <CommandGroup heading='Suggestions'>
-            <CommandItem>
-              <CalendarIcon className='me-2 h-4 w-4' />
-              <span>Calendar</span>
-            </CommandItem>
-          </CommandGroup>
-          <CommandSeparator />
-          <CommandGroup heading='Settings'>
-            <CommandItem>
-              <UserIcon className='me-2 h-4 w-4' />
-              <span>Profile</span>
-            </CommandItem>
-            <CommandItem>
-              <SettingsIcon className='me-2 h-4 w-4' />
-              <span>Settings</span>
-            </CommandItem>
-          </CommandGroup>
+          {!!productPages?.pages[0]?.items.length && (
+            <CommandGroup heading='Suggestions'>
+              {productPages.pages.map((page) =>
+                page.items.map((product) => (
+                  <CommandItem key={product.id}>
+                    <Image
+                      src={product.previewUrl}
+                      width={80}
+                      height={80}
+                      alt={product.title}
+                      className='me-2 h-4 w-4 rounded'
+                    />
+                    <span>{product.title}</span>
+                  </CommandItem>
+                )),
+              )}
+            </CommandGroup>
+          )}
         </CommandList>
       </CommandDialog>
     </nav>
