@@ -68,8 +68,11 @@ export class ProductService {
         price: new Decimal(req.price),
         discount: req.discount,
         status: Status[req.status],
-        totalRatings: 0,
-        numberOfRatings: 0,
+        numberOfOneStars: 0,
+        numberOfTwoStars: 0,
+        numberOfThreeStars: 0,
+        numberOfFourStars: 0,
+        numberOfFiveStars: 0,
         numberOfBuyers: 0,
         numberOfLikes: 0,
         categories,
@@ -159,16 +162,23 @@ export class ProductService {
       throw new NotFoundException('product is not found')
     }
 
+    const userId = this.clsService.get<number>('userId') || 0
+
     const isLiked = await this.ProductLikeRepository.exists({
       where: {
         product: { id: productId },
-        user: {
-          id: this.clsService.get<number>('userId') || 0,
-        },
+        user: { id: userId },
       },
     })
 
-    return ProductResponse.create({ ...product, liked: isLiked })
+    const isPaid = await this.productInvoiceItemRepository.existsBy({
+      invoice: {
+        customer: { id: userId },
+      },
+      product: { id: product.id },
+    })
+
+    return ProductResponse.create({ ...product, liked: isLiked, paid: isPaid })
   }
 
   async update(

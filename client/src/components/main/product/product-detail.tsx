@@ -2,7 +2,13 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Decimal from 'decimal.js'
-import { Loader2Icon, MailIcon, Share2Icon, StarIcon } from 'lucide-react'
+import {
+  InfoIcon,
+  Loader2Icon,
+  MailIcon,
+  Share2Icon,
+  StarIcon,
+} from 'lucide-react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { PropsWithChildren } from 'react'
@@ -21,6 +27,13 @@ import { Separator } from '@pengode/components/ui/separator'
 import { Product, addLike, getProduct, removeLike } from '@pengode/data/product'
 import { addProduct } from '@pengode/data/product-cart'
 import { createInvoice } from '@pengode/data/product-invoice'
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@pengode/components/ui/alert'
+import Link from 'next/link'
+import { ReviewForm } from '@pengode/components/main/product/review-form'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -46,6 +59,18 @@ export const ProductDetail = ({
       return product.liked ? removeLike(product.id) : addLike(product.id)
     },
   })
+  const numberOfStars =
+    product.numberOfOneStars * 1 +
+    product.numberOfTwoStars * 2 +
+    product.numberOfThreeStars * 3 +
+    product.numberOfFourStars * 4 +
+    product.numberOfFiveStars
+  const numberOfReviewers =
+    product.numberOfOneStars +
+    product.numberOfTwoStars +
+    product.numberOfThreeStars +
+    product.numberOfFourStars +
+    product.numberOfFiveStars
 
   const handleCreateInvoice = () => {
     createInvoiceMutation.mutate(
@@ -85,7 +110,7 @@ export const ProductDetail = ({
 
   const handleToggleLike = () => {
     toggleLikeMutation.mutate(product, {
-      onSuccess: async (product) => {
+      onSuccess: async () => {
         await queryClient.invalidateQueries({
           queryKey: ['GET_PRODUCT', product.id],
         })
@@ -151,8 +176,27 @@ export const ProductDetail = ({
             {children}
           </div>
         </div>
+        {product.paid && (
+          <div className='min-w-0 max-w-full flex-1 rounded-2xl border border-border bg-background p-4'>
+            <h1
+              id='reviews'
+              className='mb-4 scroll-m-20 text-2xl font-semibold tracking-tight'>
+              Reviews
+            </h1>
+            <div className='prose prose-slate w-full max-w-full [&>p]:break-words'>
+              <ReviewForm productId={product.id} />
+            </div>
+          </div>
+        )}
       </div>
       <div className='w-full min-w-64 sm:max-w-xs'>
+        {product.paid && (
+          <Alert className='mb-4'>
+            <InfoIcon className='h-4 w-4' />
+            <AlertTitle>Congrats!</AlertTitle>
+            <AlertDescription>You have owned this product!</AlertDescription>
+          </Alert>
+        )}
         <div className='mb-4 rounded-2xl border border-border bg-background p-4'>
           <div className='mb-4'>
             <h3 className='scroll-m-20 text-2xl font-semibold tracking-tight'>
@@ -173,16 +217,20 @@ export const ProductDetail = ({
               </div>
             )}
           </div>
-          <Input readOnly placeholder='Coupon' className='mb-4' />
-          <Button
-            className='w-full'
-            onClick={handleCreateInvoice}
-            disabled={createInvoiceMutation.isPending}>
-            {createInvoiceMutation.isPending && (
-              <Loader2Icon size={16} className='me-2 animate-spin' />
-            )}
-            Buy
-          </Button>
+          {!product.paid && (
+            <>
+              <Input readOnly placeholder='Coupon' className='mb-4' />
+              <Button
+                className='w-full'
+                onClick={handleCreateInvoice}
+                disabled={createInvoiceMutation.isPending}>
+                {createInvoiceMutation.isPending && (
+                  <Loader2Icon size={16} className='me-2 animate-spin' />
+                )}
+                Buy
+              </Button>
+            </>
+          )}
           <Separator className='mb-4' />
           <div className='flex gap-2'>
             <Button
@@ -215,41 +263,78 @@ export const ProductDetail = ({
             </Button>
           </div>
         </div>
-        <div className='flex flex-col gap-3 rounded-2xl border border-border bg-background p-4'>
+        <div className='flex flex-col gap-4 rounded-2xl border border-border bg-background p-4'>
           <h4 className='mb-2 scroll-m-20 text-xl font-semibold tracking-tight'>
             Rating
           </h4>
-          <div className='flex items-center justify-center'>
-            <h2 className='scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0'>
-              ⭐&nbsp;4.8&nbsp;
-            </h2>
-            <h6 className='text-sm text-muted-foreground'>/&nbsp;5.0</h6>
+          <div className='flex flex-col gap-3'>
+            <div className='flex items-center justify-center'>
+              <h2 className='scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0'>
+                ⭐&nbsp;{numberOfStars / numberOfReviewers || 0}&nbsp;
+              </h2>
+              <h6 className='text-sm text-muted-foreground'>/&nbsp;5.0</h6>
+            </div>
+            <div className='flex items-center gap-2 text-xs'>
+              <span>5</span>
+              <StarIcon className='h-4 w-4 text-yellow-500' />
+              <Progress
+                value={
+                  (product.numberOfFiveStars / numberOfReviewers) * 100 || 0
+                }
+                className='h-2'
+              />
+              <span>{product.numberOfFiveStars}</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs'>
+              <span>4</span>
+              <StarIcon className='h-4 w-4 text-yellow-500' />
+              <Progress
+                value={
+                  (product.numberOfFourStars / numberOfReviewers) * 100 || 0
+                }
+                className='h-2'
+              />
+              <span>{product.numberOfFourStars}</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs'>
+              <span>3</span>
+              <StarIcon className='h-4 w-4 text-yellow-500' />
+              <Progress
+                value={
+                  (product.numberOfThreeStars / numberOfReviewers) * 100 || 0
+                }
+                className='h-2'
+              />
+              <span>{product.numberOfThreeStars}</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs'>
+              <span>2</span>
+              <StarIcon className='h-4 w-4 text-yellow-500' />
+              <Progress
+                value={
+                  (product.numberOfTwoStars / numberOfReviewers) * 100 || 0
+                }
+                className='h-2'
+              />
+              <span>{product.numberOfTwoStars}</span>
+            </div>
+            <div className='flex items-center gap-2 text-xs'>
+              <span>1</span>
+              <StarIcon className='h-4 w-4 text-yellow-500' />
+              <Progress
+                value={
+                  (product.numberOfOneStars / numberOfReviewers) * 100 || 0
+                }
+                className='h-2'
+              />
+              <span>{product.numberOfOneStars}</span>
+            </div>
           </div>
-          <div className='flex items-center gap-2 text-xs'>
-            <StarIcon className='h-4 w-4 text-yellow-500' />
-            <Progress value={70} className='h-2' />
-            <span>70</span>
-          </div>
-          <div className='flex items-center gap-2 text-xs'>
-            <StarIcon className='h-4 w-4 text-yellow-500' />
-            <Progress value={20} className='h-2' />
-            <span>20</span>
-          </div>
-          <div className='flex items-center gap-2 text-xs'>
-            <StarIcon className='h-4 w-4 text-yellow-500' />
-            <Progress value={5} className='h-2' />
-            <span>5</span>
-          </div>
-          <div className='flex items-center gap-2 text-xs'>
-            <StarIcon className='h-4 w-4 text-yellow-500' />
-            <Progress value={3} className='h-2' />
-            <span>3</span>
-          </div>
-          <div className='flex items-center gap-2 text-xs'>
-            <StarIcon className='h-4 w-4 text-yellow-500' />
-            <Progress value={2} className='h-2' />
-            <span>2</span>
-          </div>
+          {product.paid && (
+            <Button asChild variant='outline' size='sm'>
+              <Link href='#reviews'>Write reviews</Link>
+            </Button>
+          )}
         </div>
       </div>
     </section>

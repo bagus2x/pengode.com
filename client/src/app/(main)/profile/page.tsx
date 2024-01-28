@@ -13,6 +13,8 @@ import {
 import { getAuthUser } from '@pengode/data/user'
 import { BoughtProductList } from '@pengode/components/main/profile/bought-product-list'
 import { LikedProductList } from '@pengode/components/main/profile/liked-product-list'
+import { ProductReviewList } from '@pengode/components/main/profile/product-review-list'
+import { signOut } from '@pengode/data/auth'
 
 export const metadata: Metadata = {
   title: 'My profile',
@@ -36,7 +38,7 @@ export default async function ProfilePage() {
               alt={user.name}
               className='h-24 w-24 rounded-full'
             />
-            <div className='flex flex-col justify-items-center'>
+            <div className='flex w-full flex-col justify-items-center'>
               <h6 className='truncate font-semibold'>
                 {user.name}&nbsp;
                 <span className='text-xs text-muted-foreground'>
@@ -44,10 +46,15 @@ export default async function ProfilePage() {
                 </span>
               </h6>
               <h6 className='mb-1 text-sm'>{user.email}</h6>
-              <div className='flex gap-2'>
-                <Button size='sm' className='h-8 flex-1 p-1 text-xs'>
-                  Sign out
-                </Button>
+              <div className='flex w-full gap-2'>
+                <form action={signOut} className='flex-1'>
+                  <Button
+                    type='submit'
+                    size='sm'
+                    className='h-8 w-full p-1 text-xs'>
+                    Sign out
+                  </Button>
+                </form>
                 <Button
                   variant='outline'
                   size='circle-sm'
@@ -72,11 +79,9 @@ export default async function ProfilePage() {
             <TabsContent value='likes'>
               <LikedProductList />
             </TabsContent>
-            <TabsContent value='invoices'>
-              Make changes to your account here.
-            </TabsContent>
+            <TabsContent value='invoices'>Coming Soon</TabsContent>
             <TabsContent value='reviews'>
-              Change your password here.
+              <ProductReviewList />
             </TabsContent>
           </Tabs>
         </section>

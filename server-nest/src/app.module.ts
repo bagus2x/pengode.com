@@ -33,12 +33,20 @@ import { ProductCartModule } from '@pengode/product-cart/product-cart.module'
 import { ProductCart } from '@pengode/product-cart/product-cart'
 import { ProductLikeModule } from '@pengode/product-like/product-like.module'
 import { ProductLike } from '@pengode/product-like/product-like'
+import { ProductReviewModule } from '@pengode/product-review/product-review.module'
+import { ProductReview } from '@pengode/product-review/product-review'
 
 @Global()
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    LoggerModule.forRoot(),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport: {
+          target: 'pino-pretty',
+        },
+      },
+    }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -63,9 +71,10 @@ import { ProductLike } from '@pengode/product-like/product-like'
           ProductInvoiceHistory,
           ProductCart,
           ProductLike,
+          ProductReview,
         ],
         synchronize: true,
-        logging: true,
+        logging: false,
       }),
     }),
     ClsModule.forRoot({
@@ -104,6 +113,7 @@ import { ProductLike } from '@pengode/product-like/product-like'
     ProductInvoiceItemModule,
     ProductCartModule,
     ProductLikeModule,
+    ProductReviewModule,
   ],
 })
 export class AppModule {}

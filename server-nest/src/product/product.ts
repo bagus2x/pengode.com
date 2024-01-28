@@ -49,11 +49,20 @@ export class Product {
   @Column({ type: 'enum', enum: Status })
   status: Status
 
-  @Column({ name: 'total_ratings' })
-  totalRatings: number
+  @Column({ name: 'number_of_one_stars' })
+  numberOfOneStars: number
 
-  @Column({ name: 'number_of_ratings' })
-  numberOfRatings: number
+  @Column({ name: 'number_of_two_stars' })
+  numberOfTwoStars: number
+
+  @Column({ name: 'number_of_three_stars' })
+  numberOfThreeStars: number
+
+  @Column({ name: 'number_of_four_stars' })
+  numberOfFourStars: number
+
+  @Column({ name: 'number_of_five_stars' })
+  numberOfFiveStars: number
 
   @Column({ name: 'number_of_buyers' })
   numberOfBuyers: number

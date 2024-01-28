@@ -39,10 +39,14 @@ export interface Product {
     name: string
     photo?: string | null
   }
-  totalRatings: number
-  numberOfRatings: number
+  numberOfOneStars: number
+  numberOfTwoStars: number
+  numberOfThreeStars: number
+  numberOfFourStars: number
+  numberOfFiveStars: number
   numberOfBuyers: number
   liked?: boolean
+  paid?: boolean
   createdAt: string
 }
 

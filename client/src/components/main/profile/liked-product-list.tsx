@@ -5,7 +5,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { ProductItem } from '@pengode/components/main/profile/product-item'
-import { getBoughtProducts, getLikedProducts } from '@pengode/data/product'
+import { getLikedProducts } from '@pengode/data/product'
 
 export type LikedProductListProps = PropsWithClassName & {}
 

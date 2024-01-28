@@ -87,10 +87,19 @@ export class ProductResponse {
   logs: Omit<LogResponse, 'product'>[]
 
   @ApiProperty()
-  totalRatings: number
+  numberOfOneStars: number
 
   @ApiProperty()
-  numberOfRatings: number
+  numberOfTwoStars: number
+
+  @ApiProperty()
+  numberOfThreeStars: number
+
+  @ApiProperty()
+  numberOfFourStars: number
+
+  @ApiProperty()
+  numberOfFiveStars: number
 
   @ApiProperty()
   numberOfBuyers: number
@@ -102,9 +111,14 @@ export class ProductResponse {
   liked?: boolean
 
   @ApiProperty()
+  paid?: boolean
+
+  @ApiProperty()
   createdAt: Date
 
-  static create(product: Product & { liked?: boolean }): ProductResponse {
+  static create(
+    product: Product & { liked?: boolean; paid?: boolean },
+  ): ProductResponse {
     return {
       id: product.id,
       title: product.title,
@@ -118,11 +132,15 @@ export class ProductResponse {
       discount: product.discount,
       owner: product.owner ? UserResponse.create(product.owner) : undefined,
       logs: product.logs ? product.logs.map(LogResponse.create) : undefined,
-      totalRatings: product.totalRatings,
-      numberOfRatings: product.numberOfRatings,
+      numberOfOneStars: product.numberOfOneStars,
+      numberOfTwoStars: product.numberOfTwoStars,
+      numberOfThreeStars: product.numberOfThreeStars,
+      numberOfFourStars: product.numberOfFourStars,
+      numberOfFiveStars: product.numberOfFiveStars,
       numberOfBuyers: product.numberOfBuyers,
       numberOfLikes: product.numberOfLikes,
       liked: product.liked,
+      paid: product.paid,
       createdAt: product.createdAt,
     }
   }
