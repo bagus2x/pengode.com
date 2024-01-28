@@ -8,6 +8,7 @@ import {
   HomeIcon,
   PuzzleIcon as ProjectIcon,
   SettingsIcon,
+  User2Icon,
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -57,6 +58,11 @@ const menus = [
         href: '/dashboard/product/editor',
       },
     ],
+  },
+  {
+    name: 'Users',
+    href: '/dashboard/user',
+    Icon: User2Icon,
   },
   {
     name: 'Settings',
