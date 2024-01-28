@@ -13,6 +13,7 @@ import {
 import { useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import { cn } from '@pengode/common/tailwind'
@@ -123,10 +124,12 @@ export function Navbar({ className }: PropsWithClassName) {
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <UserIcon className='me-2 h-4 w-4' />
-                <span>Profile</span>
-                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              <DropdownMenuItem asChild>
+                <Link href='/profile'>
+                  <UserIcon className='me-2 h-4 w-4' />
+                  <span>{session.data?.user.name}&lsquo;s profile</span>
+                  <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+                </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <SettingsIcon className='me-2 h-4 w-4' />

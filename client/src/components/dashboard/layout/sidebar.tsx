@@ -209,14 +209,16 @@ export function Sidebar({
         !collapsible && 'w-60',
       )}>
       <div className='relative my-4'>
-        <Image
-          src='/assets/astronaut.svg'
-          alt='Pengode'
-          width={32}
-          height={32}
-          className='ms-6 h-8 w-8'
-          priority
-        />
+        <Link href='/'>
+          <Image
+            src='/assets/astronaut.svg'
+            alt='Pengode'
+            width={32}
+            height={32}
+            className='ms-6 h-8 w-8'
+            priority
+          />
+        </Link>
         <button
           onClick={handleDockedChange}
           className={cn(
