@@ -136,6 +136,7 @@ export class AuthService {
       name: res.data.name,
       photo: res.data.avatar_url,
       roles: [role],
+      provider: 'GITHUB',
     })
     const tokens = await this.getTokens(createdUser.id, createdUser.username)
 
@@ -171,6 +172,7 @@ export class AuthService {
       name,
       photo,
       roles: [role],
+      provider: 'GOOGLE',
     })
 
     const tokens = await this.getTokens(createdUser.id, createdUser.username)

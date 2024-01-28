@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiResponse, ApiTags } from '@nestjs/swagger'
 import { ClsService } from 'nestjs-cls'
 
@@ -18,7 +18,7 @@ export class UserController {
   @Get('/users')
   @UseGuards(AccessTokenGuard)
   @ApiResponse({ type: PageResponse<UserResponse> })
-  findAll(req: FindAllRequest): Promise<PageResponse<UserResponse>> {
+  findAll(@Query() req: FindAllRequest): Promise<PageResponse<UserResponse>> {
     return this.userService.findAll(req)
   }
 

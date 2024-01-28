@@ -33,6 +33,9 @@ export class User {
   @Column({ nullable: true, length: 511 })
   photo: string | null
 
+  @Column({ name: 'provider', nullable: true })
+  provider?: string
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date
 
