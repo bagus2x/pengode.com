@@ -198,7 +198,6 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
         router.replace(`${pathname}?${params.toString()}`)
       },
       onError: (err) => {
-        console.log(err.message)
         restErrorMessages(err).forEach((message) => {
           toast.error(message)
         })
