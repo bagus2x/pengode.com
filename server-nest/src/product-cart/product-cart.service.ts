@@ -16,18 +16,18 @@ import { In, LessThan, MoreThan, Raw, Repository } from 'typeorm'
 @Injectable()
 export class ProductCartService {
   constructor(
-    private readonly cls: ClsService,
     @InjectRepository(ProductCart)
     private readonly productCartRepository: Repository<ProductCart>,
     @InjectRepository(Product)
     private readonly productRepository: Repository<Product>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly clsService: ClsService,
   ) {}
 
   async add(req: AddProductRequest): Promise<ProductResponse> {
     const customer = await this.userRepository.findOne({
-      where: { id: this.cls.get<number>('userId') },
+      where: { id: this.clsService.get<number>('userId') },
     })
     if (!customer) {
       throw new NotFoundException('customer is not found')
@@ -68,6 +68,9 @@ export class ProductCartService {
             ? Raw((alias) => `LOWER(${alias}) LIKE '%${req.search}%'`)
             : undefined,
         },
+        customer: {
+          id: this.clsService.get<number>('userId'),
+        },
       },
       take: req.size,
       order: {
@@ -93,13 +96,16 @@ export class ProductCartService {
           id: productId,
         },
         customer: {
-          id: this.cls.get<number>('productId'),
+          id: this.clsService.get<number>('productId') || 0,
         },
       },
       relations: {
         product: true,
       },
     })
+    if (!productCart) {
+      throw new NotFoundException('item is not found')
+    }
 
     await this.productCartRepository.remove(productCart)
 
