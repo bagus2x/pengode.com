@@ -1,14 +1,12 @@
 'use client'
 
-import { useBlockUi } from '@pengode/components/ui/block-ui'
-import { Button } from '@pengode/components/ui/button'
+import { useSession } from 'next-auth/react'
 
 export default function PlaygroundPage() {
-  const blockUi = useBlockUi()
+  const session = useSession()
   return (
     <div>
-      <Button onClick={() => blockUi.block()}>Block</Button>
-      <Button onClick={() => blockUi.unblock()}>Unblock</Button>
+      <pre>{JSON.stringify(session, null, 2)}</pre>
     </div>
   )
 }

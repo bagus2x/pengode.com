@@ -23,7 +23,7 @@ export default function SignUpPage() {
       <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8'>
         <h1 className='text-2xl font-semibold tracking-tight'>Welcome back!</h1>
         <p className='mb-8 text-muted-foreground'>
-          Fill the data below to sign in
+          Fill the data below to sign up
         </p>
         <SignUpForm className='w-full max-w-sm' />
       </div>

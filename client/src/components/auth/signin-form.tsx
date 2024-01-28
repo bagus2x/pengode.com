@@ -4,7 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
 import { useSession } from 'next-auth/react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import * as z from 'zod'
@@ -26,7 +29,6 @@ import {
   signInWithGithub,
   signInWithGoogle,
 } from '@pengode/data/auth'
-import { useEffect } from 'react'
 
 const formSchema = z.object({
   username: z.string().min(1),
@@ -50,10 +52,17 @@ export function SignInForm({ className }: PropsWithClassName) {
   const session = useSession()
 
   useEffect(() => {
-    if (!session) return
+    if (!session.data) return
 
-    if (callbackUrl) router.replace(callbackUrl)
-    else router.replace('/dashboard')
+    if (callbackUrl) {
+      router.replace(callbackUrl)
+    } else {
+      const isAdmin = session.data.user.roles.some(
+        (role) => role.name === 'ADMIN',
+      )
+      if (isAdmin) router.replace('/dashboard')
+      else router.replace('/')
+    }
   }, [callbackUrl, router, session])
 
   const handleSignInWithCredentials = (req: z.infer<typeof formSchema>) => {
@@ -99,7 +108,7 @@ export function SignInForm({ className }: PropsWithClassName) {
           control={form.control}
           name='password'
           render={({ field }) => (
-            <FormItem className='mb-4'>
+            <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input type='password' placeholder='●●●●●●●●●●●' {...field} />
@@ -108,29 +117,49 @@ export function SignInForm({ className }: PropsWithClassName) {
             </FormItem>
           )}
         />
-        <Button
-          type='submit'
-          disabled={signInMutation.isPending}
-          className='mt-4'>
+        <Button type='submit' disabled={signInMutation.isPending}>
           {signInMutation.isPending && (
             <Loader2Icon size={16} className='me-2 animate-spin' />
           )}
           Sign in
         </Button>
+        <Link href='/signup' className='text-end text-xs text-muted-foreground'>
+          Don&lsquo;t have an account? <strong>Sign up</strong>
+        </Link>
+        <div className='relative flex justify-center'>
+          <div className='absolute inset-0 -z-10 flex items-center'>
+            <span className='w-full border-t' />
+          </div>
+          <span className='mx-auto bg-background px-2 text-sm uppercase text-muted-foreground'>
+            Or continue with
+          </span>
+        </div>
         <Button
           disabled={signInMutation.isPending}
-          className='mt-4'
           type='button'
           variant='outline'
           onClick={handleSignInWithGoogle}>
+          <Image
+            src={'/assets/google.svg'}
+            width={24}
+            height={24}
+            alt='Google sign in'
+            className='me-2'
+          />
           Google
         </Button>
         <Button
           disabled={signInMutation.isPending}
-          className='mt-4'
           type='button'
           variant='outline'
           onClick={handleSignInWithGithub}>
+          <Image
+            src={'/assets/github.svg'}
+            width={24}
+            height={24}
+            alt='Github sign in'
+            className='me-2'
+          />
           GitHub
         </Button>
       </form>

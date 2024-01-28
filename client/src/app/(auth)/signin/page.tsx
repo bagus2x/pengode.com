@@ -21,11 +21,9 @@ export default function SignInPage() {
         </div>
       </div>
       <div className='flex flex-1 flex-col items-center justify-center p-4 md:p-8'>
-        <h1 className='text-2xl font-semibold tracking-tight'>
-          Create an account
-        </h1>
+        <h1 className='text-2xl font-semibold tracking-tight'>Welcome Back!</h1>
         <p className='mb-8 text-muted-foreground'>
-          Fill the data below to create your account
+          Fill the data below to sign in
         </p>
         <SignInForm className='w-full max-w-sm' />
       </div>
