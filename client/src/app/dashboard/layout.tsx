@@ -1,13 +1,30 @@
 'use client'
 
+import { useSession } from 'next-auth/react'
 import { PropsWithChildren, useState } from 'react'
+import { Loader2Icon } from 'lucide-react'
 
-import { Sidebar } from '@pengode/components/dashboard/layout/sidebar'
 import { cn } from '@pengode/common/tailwind'
 import { Navbar } from '@pengode/components/dashboard/layout/navbar'
+import { Sidebar } from '@pengode/components/dashboard/layout/sidebar'
+import { redirect } from 'next/navigation'
 
 export default function DashboardLayout({ children }: PropsWithChildren) {
   const [collapsible, setCollapsible] = useState(true)
+  const session = useSession({ required: true })
+
+  if (session.status === 'loading') {
+    return (
+      <div className='min-h-screen w-full'>
+        <Loader2Icon className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform animate-spin' />
+      </div>
+    )
+  }
+
+  const isAdmin = session.data.user.roles.some((role) => role.name === 'ADMIN')
+  if (!isAdmin) {
+    redirect('/')
+  }
 
   return (
     <div className='min-h-screen bg-gray-100 dark:bg-background'>
