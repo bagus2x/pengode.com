@@ -1,12 +1,12 @@
-'use client'
-
-import { useSession } from 'next-auth/react'
+import { env } from '@pengode/common/utils'
 
 export default function PlaygroundPage() {
-  const session = useSession()
   return (
     <div>
-      <pre>{JSON.stringify(session, null, 2)}</pre>
+      <pre>
+        BASE URL:{' '}
+        {JSON.stringify({ url: env('PENGODE_API_BASE_URL') || 'nothing' })}
+      </pre>
     </div>
   )
 }
