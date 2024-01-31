@@ -118,9 +118,6 @@ export const ProductList = ({
             toast.error(message)
           })
         },
-        onSettled: () => {
-          alert('Hello')
-        },
       },
     )
   }
