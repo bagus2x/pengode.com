@@ -147,7 +147,10 @@ export class ProductInvoiceService {
               .sub(product.price.times(product.discount || 0))
               .toString(),
             quantity: 1,
-            name: product.title,
+            name:
+              product.title.length > 10
+                ? product.title.substring(0, 10) + '...'
+                : product.title,
             merchant_name: 'Pengode',
           })),
         },

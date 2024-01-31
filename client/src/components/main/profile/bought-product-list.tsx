@@ -1,23 +1,14 @@
 'use client'
 
-import { useInfiniteQuery } from '@tanstack/react-query'
-
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { ProductItem } from '@pengode/components/main/profile/product-item'
-import { getBoughtProducts } from '@pengode/data/product'
+import { useGetBoughtProductsQuery } from '@pengode/data/product/product-hook'
 
 export type BoughtProductListProps = PropsWithClassName & {}
 
 export const BoughtProductList = ({ className }: BoughtProductListProps) => {
-  const { data: productPages } = useInfiniteQuery({
-    queryKey: ['GET_INFINITE_BOUGHT_PRODUCTS'],
-    queryFn: async ({ pageParam }) =>
-      await getBoughtProducts({ cursor: { nextCursor: pageParam } }),
-    initialPageParam: Math.pow(2, 31) - 1,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    getPreviousPageParam: (firstPage) => firstPage.previousCursor,
-  })
+  const { data: productPages } = useGetBoughtProductsQuery()
 
   return (
     <div className={cn('flex flex-col gap-4 py-1', className)}>

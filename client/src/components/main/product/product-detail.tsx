@@ -1,7 +1,9 @@
 'use client'
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
+import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
+import { Heart as HeartIcon } from 'iconsax-react'
 import {
   InfoIcon,
   Loader2Icon,
@@ -10,31 +12,36 @@ import {
   StarIcon,
 } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { PropsWithChildren } from 'react'
 import { toast } from 'sonner'
-import { Heart as HeartIcon } from 'iconsax-react'
 
-import { restErrorMessages } from '@pengode/common/rest-client'
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { RupiahFormatter, avatar } from '@pengode/common/utils'
-import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
-import { Button } from '@pengode/components/ui/button'
-import { Input } from '@pengode/components/ui/input'
-import { Progress } from '@pengode/components/ui/progress'
-import { Separator } from '@pengode/components/ui/separator'
-import { Product, addLike, getProduct, removeLike } from '@pengode/data/product'
-import { addProduct } from '@pengode/data/product-cart'
-import { createInvoice } from '@pengode/data/product-invoice'
+import { ReviewForm } from '@pengode/components/main/product/review-form'
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from '@pengode/components/ui/alert'
-import Link from 'next/link'
-import { ReviewForm } from '@pengode/components/main/product/review-form'
-import dayjs from 'dayjs'
+import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
+import { Button } from '@pengode/components/ui/button'
+import { Input } from '@pengode/components/ui/input'
+import { Progress } from '@pengode/components/ui/progress'
+import { Separator } from '@pengode/components/ui/separator'
+import {
+  useAddProductToCartMutation,
+  useGetCartProductsQuery,
+} from '@pengode/data/product-cart/product-cart-hook'
+import { useCreateInvoiceMutation } from '@pengode/data/product-invoice/product-invoice-hook'
+import { Product } from '@pengode/data/product/product'
+import {
+  useGetProductQuery,
+  useToggleLikeProductMutation,
+} from '@pengode/data/product/product-hook'
 
 export type ProductDetailProps = PropsWithClassName &
   PropsWithChildren & {
@@ -46,20 +53,21 @@ export const ProductDetail = ({
   children,
   product: initialProduct,
 }: ProductDetailProps) => {
-  const { data: product } = useQuery({
-    queryKey: ['GET_PRODUCT', initialProduct.id],
-    queryFn: async () => await getProduct(initialProduct.id),
+  const { data: product } = useGetProductQuery({
+    productId: initialProduct.id,
     initialData: initialProduct,
   })
   const router = useRouter()
-  const createInvoiceMutation = useMutation({ mutationFn: createInvoice })
+  const createInvoiceMutation = useCreateInvoiceMutation()
   const queryClient = useQueryClient()
-  const cartMutation = useMutation({ mutationFn: addProduct })
-  const toggleLikeMutation = useMutation<Product, Error, Product>({
-    mutationFn: (product) => {
-      return product.liked ? removeLike(product.id) : addLike(product.id)
-    },
+  const addProductToCartMutation = useAddProductToCartMutation()
+  const toggleLikeMutation = useToggleLikeProductMutation({
+    productId: initialProduct.id,
   })
+  if (!product) {
+    return null
+  }
+
   const numberOfStars =
     product.numberOfOneStars * 1 +
     product.numberOfTwoStars * 2 +
@@ -77,12 +85,12 @@ export const ProductDetail = ({
     createInvoiceMutation.mutate(
       { productIds: [product.id] },
       {
-        onSuccess: async (invoice) => {
+        onSuccess: (invoice) => {
           router.push(`/invoice/${invoice.id}`)
           toast.success('Invoice created')
         },
         onError: (err) => {
-          restErrorMessages(err).forEach((message) => {
+          errorMessages(err).forEach((message) => {
             toast.error(message)
           })
         },
@@ -91,17 +99,17 @@ export const ProductDetail = ({
   }
 
   const handleAddToCart = () => {
-    cartMutation.mutate(
+    addProductToCartMutation.mutate(
       { productId: product.id },
       {
         onSuccess: async () => {
           await queryClient.invalidateQueries({
-            queryKey: ['GET_PRODUCT_CART'],
+            queryKey: useGetCartProductsQuery.key,
           })
           toast.success(`${product.title} has been added to cart`)
         },
         onError: (err) => {
-          restErrorMessages(err).forEach((message) => {
+          errorMessages(err).forEach((message) => {
             toast.error(message)
           })
         },
@@ -110,10 +118,10 @@ export const ProductDetail = ({
   }
 
   const handleToggleLike = () => {
-    toggleLikeMutation.mutate(product, {
+    toggleLikeMutation.mutate(product.id, {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: ['GET_PRODUCT', product.id],
+          queryKey: useGetProductQuery.key(product.id),
         })
 
         if (product.liked) {
@@ -123,7 +131,7 @@ export const ProductDetail = ({
         }
       },
       onError: (err) => {
-        restErrorMessages(err).forEach((message) => {
+        errorMessages(err).forEach((message) => {
           toast.error(message)
         })
       },
@@ -239,8 +247,8 @@ export const ProductDetail = ({
               size='sm'
               onClick={handleAddToCart}
               className='mb-4 w-full'
-              disabled={cartMutation.isPending}>
-              {cartMutation.isPending && (
+              disabled={addProductToCartMutation.isPending}>
+              {addProductToCartMutation.isPending && (
                 <Loader2Icon size={16} className='me-2 animate-spin' />
               )}
               + Add to cart

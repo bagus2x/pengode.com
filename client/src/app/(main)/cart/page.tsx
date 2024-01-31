@@ -1,6 +1,7 @@
-import { ProductList } from '@pengode/components/main/cart/product-list'
-import { getProducts } from '@pengode/data/product-cart'
 import { Metadata } from 'next'
+
+import { ProductList } from '@pengode/components/main/cart/product-list'
+import { getProducts } from '@pengode/data/product-cart/product-cart-api'
 
 export const metadata: Metadata = {
   title: 'My cart',

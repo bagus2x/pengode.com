@@ -2,19 +2,17 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
-import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2Icon, PlusCircleIcon, PlusIcon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { forwardRef, useEffect, useRef } from 'react'
+import { forwardRef, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
 import ReactMarkdown from 'react-markdown'
 
-import { restErrorMessages } from '@pengode/common/rest-client'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { NewCategoryDialog } from '@pengode/components/dashboard/product/new-category-dialog'
@@ -53,11 +51,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@pengode/components/ui/select'
-import { upload } from '@pengode/data/cloudinary'
-import { createProduct, getProduct, updateProduct } from '@pengode/data/product'
-import { getCategories } from '@pengode/data/product-category'
 import Link from 'next/link'
 import { Badge } from '@pengode/components/ui/badge'
+import { useGetProductCategoriesQuery } from '@pengode/data/product-category/product-category-hook'
+import {
+  useGetProductQuery,
+  useUpsertProductMutation,
+} from '@pengode/data/product/product-hook'
+import { errorMessages } from '@pengode/common/axios'
 
 const formSchema = z.object({
   title: z.string().min(1).max(255),
@@ -98,14 +99,9 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
   const searchParams = useSearchParams()
   const productId = searchParams.get('id')
     ? parseInt(searchParams.get('id')!)
-    : null
-  const editMode = !!productId
-  const { data: product, ...getProductQUery } = useQuery({
-    queryKey: ['GET_PRODUCT', productId],
-    queryFn: async () => {
-      if (productId) return await getProduct(productId)
-    },
-    enabled: editMode,
+    : 0
+  const { data: product, ...getProductQuery } = useGetProductQuery({
+    productId,
   })
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -121,60 +117,23 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
   })
   const { resolvedTheme } = useTheme()
   const editorRef = useRef<MDXEditorMethods>(null)
-  const { data: categories, ...getCategoriesQuery } = useQuery({
-    queryKey: ['GET_PRODUCT_CATEGORIES'],
-    queryFn: async () => await getCategories({ size: 100 }),
-  })
+  const [search, _setSearch] = useState<string>()
+  const { data: categoryPages, ...getCategoriesQuery } =
+    useGetProductCategoriesQuery({ search })
+  const upsertProductMutation = useUpsertProductMutation({ productId })
   const blockUi = useBlockUi()
-  const createProductMutation = useMutation({
-    mutationFn: async ({ preview, ...req }: z.infer<typeof formSchema>) => {
-      if (preview instanceof File) {
-        const formData = new FormData()
-        formData.append('file', preview)
-        const result = await upload(formData)
-
-        if (editMode && productId) {
-          return await updateProduct(productId, {
-            ...req,
-            discount: req.discount / 100,
-            previewUrl: result['secure_url'],
-          })
-        } else {
-          return await createProduct({
-            ...req,
-            discount: req.discount / 100,
-            previewUrl: result['secure_url'],
-          })
-        }
-      }
-
-      if (editMode && productId) {
-        return await updateProduct(productId, {
-          ...req,
-          discount: req.discount / 100,
-          previewUrl: preview,
-        })
-      }
-
-      return await createProduct({
-        ...req,
-        discount: req.discount / 100,
-        previewUrl: preview,
-      })
-    },
-    mutationKey: ['CREATE_OR_UPDATE_PRODUCT', editMode],
-  })
   const pathname = usePathname()
   const router = useRouter()
 
   useEffect(() => {
-    if (getProductQUery.isLoading) blockUi.block()
+    if (getProductQuery.isLoading || getCategoriesQuery.isLoading)
+      blockUi.block()
     else blockUi.unblock()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [getProductQUery.isLoading])
+  }, [getProductQuery.isLoading, getCategoriesQuery.isLoading])
 
   useEffect(() => {
-    if (getProductQUery.isFetched && product) {
+    if (getProductQuery.isFetched && product) {
       form.setValue('title', product.title)
       form.setValue('description', product.description)
       form.setValue('preview', product.previewUrl)
@@ -185,20 +144,22 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
       editorRef.current?.setMarkdown(product.description)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, getProductQUery.isFetched, editorRef])
+  }, [form, getProductQuery.isFetched, editorRef])
 
   const handleSave = (req: z.infer<typeof formSchema>) => {
-    createProductMutation.mutate(req, {
-      onSuccess: (product) => {
-        getProductQUery.refetch()
+    upsertProductMutation.mutate(req, {
+      onSuccess: async (product) => {
+        await getProductQuery.refetch()
+
         toast.success('Product successfully saved')
 
         const params = new URLSearchParams(searchParams.toString())
         params.set('id', `${product.id}`)
+
         router.replace(`${pathname}?${params.toString()}`)
       },
       onError: (err) => {
-        restErrorMessages(err).forEach((message) => {
+        errorMessages(err).forEach((message) => {
           toast.error(message)
         })
       },
@@ -308,12 +269,12 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value='0'>0%</SelectItem>
-                        <SelectItem value='10'>10%</SelectItem>
-                        <SelectItem value='40'>40%</SelectItem>
-                        <SelectItem value='60'>60%</SelectItem>
-                        <SelectItem value='80'>80%</SelectItem>
-                        <SelectItem value='90'>90%</SelectItem>
-                        <SelectItem value='100%'>100%</SelectItem>
+                        <SelectItem value='0.1'>10%</SelectItem>
+                        <SelectItem value='0.4'>40%</SelectItem>
+                        <SelectItem value='0.6'>60%</SelectItem>
+                        <SelectItem value='0.8'>80%</SelectItem>
+                        <SelectItem value='0.9'>90%</SelectItem>
+                        <SelectItem value='1'>100%</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -365,10 +326,14 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
                       <MultiSelect
                         placeholder='Select categories'
                         options={
-                          categories?.items.map((category) => ({
-                            label: category.name,
-                            value: `${category.id}`,
-                          })) || []
+                          categoryPages?.pages
+                            ?.map((page) =>
+                              page.items.map((category) => ({
+                                label: category.name,
+                                value: `${category.id}`,
+                              })),
+                            )
+                            .flat() || []
                         }
                         values={new Set(field.value.map((v) => `${v}`))}
                         onChange={(values) => {
@@ -382,8 +347,8 @@ export const ProductForm = ({ className }: PropsWithClassName) => {
                   </FormItem>
                 )}
               />
-              <Button type='submit' disabled={createProductMutation.isPending}>
-                {createProductMutation.isPending && (
+              <Button type='submit' disabled={upsertProductMutation.isPending}>
+                {upsertProductMutation.isPending && (
                   <Loader2Icon className='me-2 h-4 w-4 animate-spin' />
                 )}
                 Save

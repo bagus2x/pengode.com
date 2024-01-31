@@ -25,17 +25,22 @@ import {
   PopoverTrigger,
 } from '@pengode/components/ui/popover'
 import { Separator } from '@pengode/components/ui/separator'
+import { Article } from '@pengode/data/article/article'
 import Link from 'next/link'
-import { Status } from '@pengode/data/article'
 
 export type TableToolbarProps = PropsWithClassName & {
   search: string
   onSearch: (search: string) => void
-  selectedStatuses: Status[]
-  onChangeStatuses: (statuses: Status[]) => void
+  selectedStatuses: Article['status'][]
+  onChangeStatuses: (statuses: Article['status'][]) => void
 }
 
-const statuses: Status[] = ['DRAFT', 'SCHEDULED', 'PUBLISHED', 'DELETED']
+const statuses: Article['status'][] = [
+  'DRAFT',
+  'SCHEDULED',
+  'PUBLISHED',
+  'DELETED',
+]
 
 export const TableToolbar = ({
   search,
@@ -44,7 +49,10 @@ export const TableToolbar = ({
   selectedStatuses,
   onChangeStatuses,
 }: TableToolbarProps) => {
-  const handleChangeStatuses = (selected: Status, only?: boolean) => {
+  const handleChangeStatuses = (
+    selected: Article['status'],
+    only?: boolean,
+  ) => {
     if (only) {
       onChangeStatuses([selected])
       return

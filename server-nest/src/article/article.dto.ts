@@ -28,7 +28,7 @@ export class CreateArticleRequest {
   @MaxLength(511)
   @IsOptional()
   @ApiProperty()
-  thumbnail?: string | null
+  thumbnailUrl?: string | null
 
   @IsString()
   @IsNotEmpty()
@@ -67,7 +67,7 @@ export class UpdateArticleRequest {
   @MaxLength(511)
   @IsOptional()
   @ApiProperty()
-  thumbnail?: string | null
+  thumbnailUrl?: string | null
 
   @IsString()
   @IsNotEmpty()
@@ -147,7 +147,7 @@ export class ArticleResponse {
   title: string
 
   @ApiProperty()
-  thumbnail: string | null
+  thumbnailUrl: string | null
 
   @ApiProperty()
   body: string
@@ -183,7 +183,7 @@ export class ArticleResponse {
     return {
       id: article.id,
       title: article.title,
-      thumbnail: article.thumbnail,
+      thumbnailUrl: article.thumbnailUrl,
       body: article.body,
       summary: article.summary,
       readingTime: article.readingTime,

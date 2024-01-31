@@ -1,10 +1,11 @@
+import Decimal from 'decimal.js'
+import Image from 'next/image'
+
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { RupiahFormatter } from '@pengode/common/utils'
 import { Checkbox } from '@pengode/components/ui/checkbox'
-import { Product } from '@pengode/data/product'
-import Decimal from 'decimal.js'
-import Image from 'next/image'
+import { Product } from '@pengode/data/product/product'
 
 export type ProductItemProps = PropsWithClassName & {
   product: Product

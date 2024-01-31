@@ -1,7 +1,7 @@
 'use client'
 
-import { useMutation, useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
+import { useInView } from 'framer-motion'
 import {
   CalendarClockIcon,
   EditIcon,
@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
 import { cn } from '@pengode/common/tailwind'
@@ -23,7 +23,6 @@ import { PropsWithClassName } from '@pengode/common/types'
 import { avatar } from '@pengode/common/utils'
 import { ArticleInfoDialog } from '@pengode/components/dashboard/article/article-info-dialog'
 import { ArticleSchedulerDialog } from '@pengode/components/dashboard/article/article-scheduler-dialog'
-import { TablePagination } from '@pengode/components/dashboard/article/table-pagination'
 import { TableToolbar } from '@pengode/components/dashboard/article/table-toolbar'
 import { Badge } from '@pengode/components/ui/badge'
 import { useBlockUi } from '@pengode/components/ui/block-ui'
@@ -46,56 +45,41 @@ import {
   TableHeader,
   TableRow,
 } from '@pengode/components/ui/table'
+import { Article } from '@pengode/data/article/article'
 import {
-  Article,
-  Status,
-  deleteArticle,
-  draftArticle,
-  getArticles,
-  publishArticle,
-  restoreArticle,
-  scheduleArticle,
-} from '@pengode/data/article'
-import { Cursor } from '@pengode/data/types'
+  useDeleteArticleMutation,
+  useDraftArticleMutation,
+  useGetArticlesQuery,
+  usePublishArticleMutation,
+  useRestoreArticleMutation,
+  useScheduleArticleMutation,
+} from '@pengode/data/article/article-hook'
 
 export const ArticleTable = ({ className }: PropsWithClassName) => {
-  const [cursor, setCursor] = useState<Cursor>({
-    nextCursor: Math.pow(2, 31) - 1,
-  })
   const [size, setSize] = useState(10)
   const [search, setSearch] = useState('')
-  const [selectedStatuses, setSelectedStatuses] = useState<Status[]>([
-    'DRAFT',
-    'PUBLISHED',
-    'SCHEDULED',
-    'DELETED',
-  ])
-  const { data: articles, ...getArticlesQuery } = useQuery({
-    queryKey: [
-      'GET_ARTICLES',
-      cursor.previousCursor,
-      cursor.nextCursor,
-      size,
-      search,
-      selectedStatuses,
-    ],
-    queryFn: async () =>
-      await getArticles({
-        cursor,
-        size,
-        search,
-        statuses: selectedStatuses,
-      }),
+  const [selectedStatuses, setSelectedStatuses] = useState<Article['status'][]>(
+    ['DRAFT', 'PUBLISHED', 'SCHEDULED', 'DELETED'],
+  )
+  const { data: articlePages, ...getArticlesQuery } = useGetArticlesQuery({
+    size,
+    search,
   })
-  const draftArticleMutation = useMutation({ mutationFn: draftArticle })
-  const scheduleArticleMutation = useMutation({ mutationFn: scheduleArticle })
-  const publishArticleMutation = useMutation({ mutationFn: publishArticle })
-  const deleteArticleMutation = useMutation({ mutationFn: deleteArticle })
-  const restoreArticleMutation = useMutation({ mutationFn: restoreArticle })
+  const draftArticleMutation = useDraftArticleMutation()
+  const scheduleArticleMutation = useScheduleArticleMutation()
+  const publishArticleMutation = usePublishArticleMutation()
+  const deleteArticleMutation = useDeleteArticleMutation()
+  const restoreArticleMutation = useRestoreArticleMutation()
   const blockUi = useBlockUi()
   const [scheduledArticle, setScheduledArticle] = useState<Article | null>(null)
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const { confirm, ConfirmationDialog } = useConfirmation()
+  const loaderRef = useRef<HTMLDivElement>(null)
+  const inView = useInView(loaderRef)
+
+  useEffect(() => {
+    if (inView && getArticlesQuery.hasNextPage) getArticlesQuery.fetchNextPage()
+  }, [inView, getArticlesQuery])
 
   const handleDraftArticle = (article: Article) => () => {
     confirm({
@@ -203,14 +187,6 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
     })
   }
 
-  const handleNextCursor = () => {
-    setCursor({ nextCursor: articles?.nextCursor })
-  }
-
-  const handlePreviousCursor = () => {
-    setCursor({ previousCursor: articles?.previousCursor })
-  }
-
   const handleRestoreArticle = (article: Article) => () => {
     confirm({
       title: 'Are you sure to restore article?',
@@ -257,129 +233,128 @@ export const ArticleTable = ({ className }: PropsWithClassName) => {
                 </TableRow>
               </TableHeader>
               <TableBody className='border-b border-b-border'>
-                {articles?.items?.map((article) => (
-                  <TableRow key={article.id}>
-                    <TableCell className='w-28 font-medium'>
-                      <div className='flex items-center gap-2'>
-                        <Image
-                          src={avatar(
-                            article.author.name,
-                            article.author.photo,
-                          )}
-                          width={20}
-                          height={20}
-                          alt={article.author.name}
-                          className='shrink-0 rounded-full transition hover:scale-105'
-                        />
-                        <span className='flex-1 truncate'>
-                          {article.author.name}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className='max-w-xs truncate'>
-                      <Badge
-                        className={cn(
-                          'me-2',
-                          article.status === 'DRAFT' &&
-                            'bg-indigo-100 text-indigo-500 hover:bg-indigo-100',
-                          article.status === 'SCHEDULED' &&
-                            'bg-orange-100 text-orange-500 hover:bg-orange-100',
-                          article.status === 'PUBLISHED' &&
-                            'bg-green-100 text-green-500 hover:bg-green-100',
-                          article.status === 'DELETED' &&
-                            'bg-red-100 text-red-500 hover:bg-red-100',
-                        )}>
-                        {article.status.toLowerCase()}
-                      </Badge>
-                      {article.title}
-                    </TableCell>
-                    <TableCell className='max-w-xs truncate'>
-                      {article.summary}
-                    </TableCell>
-                    <TableCell className='text-sm'>
-                      {dayjs(new Date(article.createdAt)).format(
-                        'DD MMM YY HH:MM',
-                      )}
-                    </TableCell>
-                    <TableCell className='text-right'>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className='grid w-full place-items-center'>
-                            <MoreHorizontalIcon className='h-4 w-4' />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => setSelectedArticle(article)}>
-                            <InfoIcon className='me-2 h-4 w-4' />
-                            Info
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handlePublishArticle(article)}
-                            disabled={article.status !== 'DRAFT'}>
-                            <SendIcon className='me-2 h-4 w-4' />
-                            Publish
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setScheduledArticle(article)}
-                            disabled={article.status !== 'DRAFT'}>
-                            <CalendarClockIcon className='me-2 h-4 w-4' />
-                            Schedule
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleDraftArticle(article)}
-                            disabled={
-                              article.status !== 'PUBLISHED' &&
-                              article.status !== 'SCHEDULED'
-                            }>
-                            <UndoIcon className='me-2 h-4 w-4' />
-                            Draft
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleDeleteArticle(article)}>
-                            <TrashIcon className='me-2 h-4 w-4' />
-                            Delete
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={handleRestoreArticle(article)}
-                            disabled={article.status !== 'DELETED'}>
-                            <UndoDotIcon className='me-2 h-4 w-4' />
-                            Restore
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link
-                              href={`/dashboard/article/editor?id=${article.id}`}>
-                              <EditIcon className='me-2 h-4 w-4' />
-                              Edit
-                            </Link>
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {articlePages?.pages.map((page) =>
+                  page.items.map((article) => (
+                    <TableRow key={article.id}>
+                      <TableCell className='w-28 font-medium'>
+                        <div className='flex items-center gap-2'>
+                          <Image
+                            src={avatar(
+                              article.author.name,
+                              article.author.photo,
+                            )}
+                            width={20}
+                            height={20}
+                            alt={article.author.name}
+                            className='shrink-0 rounded-full transition hover:scale-105'
+                          />
+                          <span className='flex-1 truncate'>
+                            {article.author.name}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className='max-w-xs truncate'>
+                        <Badge
+                          className={cn(
+                            'me-2',
+                            article.status === 'DRAFT' &&
+                              'bg-indigo-100 text-indigo-500 hover:bg-indigo-100',
+                            article.status === 'SCHEDULED' &&
+                              'bg-orange-100 text-orange-500 hover:bg-orange-100',
+                            article.status === 'PUBLISHED' &&
+                              'bg-green-100 text-green-500 hover:bg-green-100',
+                            article.status === 'DELETED' &&
+                              'bg-red-100 text-red-500 hover:bg-red-100',
+                          )}>
+                          {article.status.toLowerCase()}
+                        </Badge>
+                        {article.title}
+                      </TableCell>
+                      <TableCell className='max-w-xs truncate'>
+                        {article.summary}
+                      </TableCell>
+                      <TableCell className='text-sm'>
+                        {dayjs(new Date(article.createdAt)).format(
+                          'DD MMM YY HH:MM',
+                        )}
+                      </TableCell>
+                      <TableCell className='text-right'>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className='grid w-full place-items-center'>
+                              <MoreHorizontalIcon className='h-4 w-4' />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => setSelectedArticle(article)}>
+                              <InfoIcon className='me-2 h-4 w-4' />
+                              Info
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handlePublishArticle(article)}
+                              disabled={article.status !== 'DRAFT'}>
+                              <SendIcon className='me-2 h-4 w-4' />
+                              Publish
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => setScheduledArticle(article)}
+                              disabled={article.status !== 'DRAFT'}>
+                              <CalendarClockIcon className='me-2 h-4 w-4' />
+                              Schedule
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleDraftArticle(article)}
+                              disabled={
+                                article.status !== 'PUBLISHED' &&
+                                article.status !== 'SCHEDULED'
+                              }>
+                              <UndoIcon className='me-2 h-4 w-4' />
+                              Draft
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleDeleteArticle(article)}>
+                              <TrashIcon className='me-2 h-4 w-4' />
+                              Delete
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={handleRestoreArticle(article)}
+                              disabled={article.status !== 'DELETED'}>
+                              <UndoDotIcon className='me-2 h-4 w-4' />
+                              Restore
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/dashboard/article/editor?id=${article.id}`}>
+                                <EditIcon className='me-2 h-4 w-4' />
+                                Edit
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )),
+                )}
               </TableBody>
             </Table>
             <ScrollBar orientation='horizontal' />
           </ScrollArea>
-          <TablePagination
-            size={size}
-            onChangeSize={setSize}
-            length={articles?.items?.length}
-            disablePreviousPage={false}
-            onClickPreviousPage={handlePreviousCursor}
-            disableNextPage={false}
-            onClickNextPage={handleNextCursor}
-            className='px-4'
-          />
-        </Card>
-        {getArticlesQuery.isLoading && (
-          <div className='absolute left-1/2 top-1/2 mt-14 -translate-x-1/2 -translate-y-1/2 transform'>
-            <Loader2Icon className='animate-spin' />
+          <div className='relative flex w-full flex-col items-center justify-center'>
+            <div
+              ref={loaderRef}
+              className='absolute left-1/2 top-1/2 mt-14 -translate-x-1/2 -translate-y-1/2 transform'>
+              <Loader2Icon
+                className={cn(
+                  'animate-spin',
+                  !getArticlesQuery.isFetching && 'hidden',
+                )}
+              />
+            </div>
           </div>
-        )}
+        </Card>
       </section>
       <ConfirmationDialog />
       <ArticleInfoDialog

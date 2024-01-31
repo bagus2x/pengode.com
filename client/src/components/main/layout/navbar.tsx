@@ -11,7 +11,7 @@ import {
   SunIcon,
   UserIcon,
 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -28,7 +28,6 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-  CommandSeparator,
 } from '@pengode/components/ui/command'
 import {
   DropdownMenu,
@@ -40,30 +39,16 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@pengode/components/ui/dropdown-menu'
-import { signOut } from '@pengode/data/auth'
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
-import { getProducts as getCartProducts } from '@pengode/data/product-cart'
-import { getProducts } from '@pengode/data/product'
+import { useGetCartProductsQuery } from '@pengode/data/product-cart/product-cart-hook'
+import { useGetProductsQuery } from '@pengode/data/product/product-hook'
 
 export function Navbar({ className }: PropsWithClassName) {
   const session = useSession()
   const [openCommand, setOpenCommand] = useState(false)
   const { setTheme, resolvedTheme } = useTheme()
-  const { data: products } = useQuery({
-    queryKey: ['GET_PRODUCT_CART'],
-    queryFn: async () => await getCartProducts({ size: 6 }),
-    select: (data) => data.items,
-    enabled: !!session.data,
-  })
+  const { data: cartProductPages } = useGetCartProductsQuery({})
   const [search, setSearch] = useState('')
-  const { data: productPages } = useInfiniteQuery({
-    queryKey: ['GET_INFINITE_PRODUCTS', search],
-    queryFn: async ({ pageParam }) =>
-      await getProducts({ cursor: { nextCursor: pageParam }, search }),
-    initialPageParam: Math.pow(2, 31) - 1,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    getPreviousPageParam: (firstPage) => firstPage.previousCursor,
-  })
+  const { data: searchProductPages } = useGetProductsQuery({ search })
 
   useEffect(() => {
     if (!session.data?.user) session.update()
@@ -98,9 +83,11 @@ export function Navbar({ className }: PropsWithClassName) {
             <DropdownMenuTrigger asChild>
               <button className='relative outline-none'>
                 <ShoppingCartIcon className='text-muted-foreground' />
-                {!!products?.length && (
+                {!!cartProductPages?.pages[0]?.items?.length && (
                   <span className='absolute -end-2 -top-2 grid aspect-square h-5 w-5 place-items-center rounded-full bg-green-500 text-xs text-white'>
-                    {products.length > 5 ? '5+' : products.length}
+                    {cartProductPages.pages[0].items.length > 5
+                      ? '5+'
+                      : cartProductPages.pages[0]?.items?.length}
                   </span>
                 )}
               </button>
@@ -115,11 +102,11 @@ export function Navbar({ className }: PropsWithClassName) {
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
                 <DropdownMenuItem>
-                  {!products?.length && (
+                  {!cartProductPages?.pages[0]?.items?.length && (
                     <p className='w-full text-center'>Empty</p>
                   )}
                 </DropdownMenuItem>
-                {products?.map((product) => (
+                {cartProductPages?.pages[0]?.items?.map((product) => (
                   <DropdownMenuItem key={product.id}>
                     <Image
                       src={product.previewUrl}
@@ -244,9 +231,9 @@ export function Navbar({ className }: PropsWithClassName) {
         />
         <CommandList className='scrollbar-thin'>
           <CommandEmpty>No results found.</CommandEmpty>
-          {!!productPages?.pages[0]?.items.length && (
+          {!!searchProductPages?.pages[0]?.items.length && (
             <CommandGroup heading='Suggestions'>
-              {productPages.pages.map((page) =>
+              {searchProductPages.pages.map((page) =>
                 page.items.map((product) => (
                   <CommandItem key={product.id}>
                     <Image

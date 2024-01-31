@@ -26,16 +26,16 @@ import {
   PopoverTrigger,
 } from '@pengode/components/ui/popover'
 import { Separator } from '@pengode/components/ui/separator'
-import { Status } from '@pengode/data/product'
+import { Product } from '@pengode/data/product/product'
 
 export type TableToolbarProps = PropsWithClassName & {
   search: string
   onSearch: (search: string) => void
-  selectedStatuses: Status[]
-  onChangeStatuses: (statuses: Status[]) => void
+  selectedStatuses: Product['status'][]
+  onChangeStatuses: (statuses: Product['status'][]) => void
 }
 
-const statuses: Status[] = ['VISIBLE', 'INVISIBLE']
+const statuses: Product['status'][] = ['VISIBLE', 'INVISIBLE']
 
 export const TableToolbar = ({
   search,
@@ -44,7 +44,10 @@ export const TableToolbar = ({
   selectedStatuses,
   onChangeStatuses,
 }: TableToolbarProps) => {
-  const handleChangeStatuses = (selected: Status, only?: boolean) => {
+  const handleChangeStatuses = (
+    selected: Product['status'],
+    only?: boolean,
+  ) => {
     if (only) {
       onChangeStatuses([selected])
       return

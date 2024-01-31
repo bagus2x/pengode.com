@@ -96,7 +96,7 @@ export class ProductCartService {
           id: productId,
         },
         customer: {
-          id: this.clsService.get<number>('productId') || 0,
+          id: this.clsService.get<number>('userId') || 0,
         },
       },
       relations: {

@@ -29,8 +29,8 @@ export class Article {
   @Column({ length: 255 })
   title: string
 
-  @Column({ length: 511, nullable: true })
-  thumbnail: string | null
+  @Column({ name: 'thumbnail_url', length: 511, nullable: true })
+  thumbnailUrl?: string | null
 
   @Column({ type: 'text' })
   body: string

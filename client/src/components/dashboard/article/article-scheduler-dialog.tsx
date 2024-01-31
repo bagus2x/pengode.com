@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from '@pengode/components/ui/dialog'
 import { Label } from '@pengode/components/ui/label'
-import { Article } from '@pengode/data/article'
+import { Article } from '@pengode/data/article/article'
 
 export type ArticleSchedulerDialogProps = PropsWithClassName & {
   article?: Article | null

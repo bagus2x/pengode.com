@@ -1,9 +1,8 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { signIn as signInWithNextAuth, useSession } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,6 +11,7 @@ import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { Button } from '@pengode/components/ui/button'
@@ -24,11 +24,7 @@ import {
   FormMessage,
 } from '@pengode/components/ui/form'
 import { Input } from '@pengode/components/ui/input'
-import {
-  signInWithCredentials,
-  signInWithGithub,
-  signInWithGoogle,
-} from '@pengode/data/auth'
+import { useSignInMutation } from '@pengode/data/auth/auth-hook'
 
 const formSchema = z.object({
   username: z.string().min(1),
@@ -43,9 +39,7 @@ export function SignInForm({ className }: PropsWithClassName) {
       password: '',
     },
   })
-  const signInMutation = useMutation({
-    mutationFn: signInWithCredentials,
-  })
+  const signInMutation = useSignInMutation()
   const searchParams = useSearchParams()
   const router = useRouter()
   const callbackUrl = searchParams.get('callbackUrl')
@@ -71,7 +65,7 @@ export function SignInForm({ className }: PropsWithClassName) {
         toast.success('Signed in')
       },
       onError: (err) => {
-        err.message.split(', ').forEach((message) => {
+        errorMessages(err).forEach((message) => {
           toast.error(message)
         })
       },
@@ -79,11 +73,11 @@ export function SignInForm({ className }: PropsWithClassName) {
   }
 
   const handleSignInWithGoogle = async () => {
-    await signInWithGoogle({ callbackUrl })
+    await signInWithNextAuth('google')
   }
 
   const handleSignInWithGithub = async () => {
-    await signInWithGithub({ callbackUrl })
+    await signInWithNextAuth('github')
   }
 
   return (

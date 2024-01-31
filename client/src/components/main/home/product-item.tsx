@@ -9,7 +9,7 @@ import { RupiahFormatter } from '@pengode/common/utils'
 import { AspectRatio } from '@pengode/components/ui/aspect-ratio'
 import { Badge } from '@pengode/components/ui/badge'
 import { Separator } from '@pengode/components/ui/separator'
-import { Product } from '@pengode/data/product'
+import { Product } from '@pengode/data/product/product'
 
 export type ProductItemProps = PropsWithClassName & {
   product: Product

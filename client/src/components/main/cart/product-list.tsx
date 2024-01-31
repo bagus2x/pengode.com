@@ -1,47 +1,31 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQueryClient,
-} from '@tanstack/react-query'
 
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { ProductItem } from '@pengode/components/main/cart/product-item'
-import { Product } from '@pengode/data/product'
-import { getProducts, removeProduct } from '@pengode/data/product-cart'
-import { Page } from '@pengode/data/types'
-import { Button } from '@pengode/components/ui/button'
-import { toast } from 'sonner'
-import Decimal from 'decimal.js'
 import { RupiahFormatter } from '@pengode/common/utils'
-import { createInvoice } from '@pengode/data/product-invoice'
-import { useRouter } from 'next/navigation'
-import { restErrorMessages } from '@pengode/common/rest-client'
+import { ProductItem } from '@pengode/components/main/cart/product-item'
+import { Button } from '@pengode/components/ui/button'
+import {
+  useGetCartProductsQuery,
+  useRemoveProductFromCartMutation,
+} from '@pengode/data/product-cart/product-cart-hook'
+import { useCreateInvoiceMutation } from '@pengode/data/product-invoice/product-invoice-hook'
+import { Product } from '@pengode/data/product/product'
+import { Page } from '@pengode/data/types'
+import Decimal from 'decimal.js'
 import { Loader2Icon } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 
 export type ProductListProps = PropsWithClassName & {
   products: Page<Product>
 }
 
-export const ProductList = ({ className, products }: ProductListProps) => {
-  const queryClient = useQueryClient()
-  const { data: productPages } = useInfiniteQuery({
-    queryKey: ['GET_INFINITE_PRODUCT_CART'],
-    queryFn: async ({ pageParam }) =>
-      await getProducts({ cursor: { nextCursor: pageParam } }),
-    initialData: () => {
-      return {
-        pageParams: [undefined],
-        pages: [products],
-      }
-    },
-    initialPageParam: Math.pow(2, 31) - 1,
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
-    getPreviousPageParam: (firstPage) => firstPage.previousCursor,
-  })
+export const useSelectedProducts = () => {
   const [selectedProducts, setSelectedProduct] = useState<Product[]>([])
   const { selectedProductIds, grossAmount } = useMemo(() => {
     return selectedProducts.reduce(
@@ -60,14 +44,31 @@ export const ProductList = ({ className, products }: ProductListProps) => {
       },
     )
   }, [selectedProducts])
-  const removeProductsMutation = useMutation<Product[], Error, number[]>({
-    mutationFn: (productIds) => {
-      return Promise.all(
-        productIds.map((productId) => removeProduct(productId)),
-      )
-    },
+
+  return {
+    selectedProducts,
+    setSelectedProduct,
+    selectedProductIds,
+    grossAmount,
+  }
+}
+
+export const ProductList = ({
+  className,
+  products: initialProductPage,
+}: ProductListProps) => {
+  const queryClient = useQueryClient()
+  const { data: productPages } = useGetCartProductsQuery({
+    initialData: initialProductPage,
   })
-  const createInvoiceMutation = useMutation({ mutationFn: createInvoice })
+  const {
+    selectedProducts,
+    setSelectedProduct,
+    selectedProductIds,
+    grossAmount,
+  } = useSelectedProducts()
+  const removeProductsFromCartMutation = useRemoveProductFromCartMutation()
+  const createInvoiceMutation = useCreateInvoiceMutation()
   const router = useRouter()
 
   const handleSelectProduct =
@@ -86,16 +87,18 @@ export const ProductList = ({ className, products }: ProductListProps) => {
     }
 
   const handleRemoveProducts = () => {
-    removeProductsMutation.mutate(selectedProductIds, {
+    removeProductsFromCartMutation.mutate(selectedProductIds, {
       onSuccess: async (products) => {
         await queryClient.invalidateQueries({
-          queryKey: ['GET_INFINITE_PRODUCT_CART'],
-        })
-        await queryClient.invalidateQueries({
-          queryKey: ['GET_PRODUCT_CART'],
+          queryKey: useGetCartProductsQuery.key,
         })
         setSelectedProduct([])
         toast.success(`${products.length} products are removed`)
+      },
+      onError: (err) => {
+        errorMessages(err).forEach((message) => {
+          toast.error(message)
+        })
       },
     })
   }
@@ -111,9 +114,12 @@ export const ProductList = ({ className, products }: ProductListProps) => {
           router.push(`/invoice/${invoice.id}`)
         },
         onError: (err) => {
-          restErrorMessages(err).forEach((message) => {
+          errorMessages(err).forEach((message) => {
             toast.error(message)
           })
+        },
+        onSettled: () => {
+          alert('Hello')
         },
       },
     )
@@ -126,7 +132,7 @@ export const ProductList = ({ className, products }: ProductListProps) => {
       </h1>
       <div className={'flex items-start gap-4'}>
         <div className='flex flex-1 flex-col gap-4 rounded-2xl border border-border bg-background'>
-          {!productPages.pages[0]?.items.length && (
+          {!productPages?.pages[0]?.items.length && (
             <div className='p-4 text-center'>Your cart is empty</div>
           )}
           {!!selectedProducts.length && (
@@ -139,7 +145,7 @@ export const ProductList = ({ className, products }: ProductListProps) => {
               </Button>
             </div>
           )}
-          {productPages.pages.map((page) =>
+          {productPages?.pages?.map((page) =>
             page.items.map((product) => (
               <ProductItem
                 key={product.id}

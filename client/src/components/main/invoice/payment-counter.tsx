@@ -1,8 +1,9 @@
-import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { useEffect, useState } from 'react'
+
+import { cn } from '@pengode/common/tailwind'
 
 export type PaymentCounterProps = PropsWithClassName & {
   createdAt: string

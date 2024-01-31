@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { avatar } from '@pengode/common/utils'
-import { Product } from '@pengode/data/product'
+import { Product } from '@pengode/data/product/product'
 
 export type ProductItemProps = PropsWithClassName & {
   product: Product

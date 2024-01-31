@@ -35,10 +35,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@pengode/components/ui/select'
-import { createCategory } from '@pengode/data/article-category'
+import { useCreateProductCategoryMutation } from '@pengode/data/product-category/product-category-hook'
 import { DialogDescription } from '@radix-ui/react-dialog'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useGetArticleCategoriesQuery } from '@pengode/data/article-category/article-category-hook'
 
 const colors = [
   { name: 'Slate', value: '#64748b' },
@@ -65,12 +66,14 @@ export const NewCategoryDialog = ({ className }: PropsWithClassName) => {
     },
   })
   const queryClient = useQueryClient()
-  const createCategoryMutation = useMutation({ mutationFn: createCategory })
+  const createCategoryMutation = useCreateProductCategoryMutation()
 
   const handleSubmit = (req: z.infer<typeof formSchema>) => {
     createCategoryMutation.mutate(req, {
       onSuccess: async () => {
-        await queryClient.invalidateQueries({ queryKey: ['GET_CATEGORIES'] })
+        await queryClient.invalidateQueries({
+          queryKey: useGetArticleCategoriesQuery.key().slice(0, 1),
+        })
         setOpen(false)
       },
       onError: (err) => {

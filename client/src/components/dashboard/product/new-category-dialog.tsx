@@ -1,7 +1,6 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { PlusCircleIcon } from 'lucide-react'
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
@@ -27,8 +26,11 @@ import {
   FormMessage,
 } from '@pengode/components/ui/form'
 import { Input } from '@pengode/components/ui/input'
-import { createCategory } from '@pengode/data/product-category'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useCreateProductCategoryMutation,
+  useGetProductCategoriesQuery,
+} from '@pengode/data/product-category/product-category-hook'
+import { useQueryClient } from '@tanstack/react-query'
 
 const formSchema = z.object({
   name: z.string().min(1).max(16),
@@ -38,7 +40,10 @@ export type NewCategoryDialogProps = PropsWithClassName & {
   renderButton: React.ReactNode
 }
 
-export const NewCategoryDialog = ({ className, renderButton }: NewCategoryDialogProps) => {
+export const NewCategoryDialog = ({
+  className,
+  renderButton,
+}: NewCategoryDialogProps) => {
   const [open, setOpen] = useState(false)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,13 +52,13 @@ export const NewCategoryDialog = ({ className, renderButton }: NewCategoryDialog
     },
   })
   const queryClient = useQueryClient()
-  const createCategoryMutation = useMutation({ mutationFn: createCategory })
+  const createCategoryMutation = useCreateProductCategoryMutation()
 
   const handleSubmit = (req: z.infer<typeof formSchema>) => {
     createCategoryMutation.mutate(req, {
       onSuccess: async () => {
         await queryClient.invalidateQueries({
-          queryKey: ['GET_PRODUCT_CATEGORIES'],
+          queryKey: useGetProductCategoriesQuery.key().splice(0, 1),
         })
         setOpen(false)
       },
@@ -67,9 +72,7 @@ export const NewCategoryDialog = ({ className, renderButton }: NewCategoryDialog
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {renderButton}
-      </DialogTrigger>
+      <DialogTrigger asChild>{renderButton}</DialogTrigger>
       <DialogContent className={cn('sm:max-w-sm', className)}>
         <Form {...form}>
           <form

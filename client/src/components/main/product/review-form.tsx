@@ -2,9 +2,8 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
-import { useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
 import { forwardRef, useEffect, useRef } from 'react'
@@ -13,7 +12,7 @@ import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
-import { restErrorMessages } from '@pengode/common/rest-client'
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { Button } from '@pengode/components/ui/button'
@@ -26,9 +25,9 @@ import {
 } from '@pengode/components/ui/form'
 import { RatingBar } from '@pengode/components/ui/rating-bar'
 import {
-  createProductReview,
-  getProductReviewByAuthUserAndProductId,
-} from '@pengode/data/product-review'
+  useCreateProductReviewMutationQuery,
+  useGetProductReviewByAuthUserAndProductQuery,
+} from '@pengode/data/product-review/product-review-hook'
 
 const Editor = dynamic(
   () =>
@@ -61,14 +60,11 @@ const formSchema = z.object({
 
 export const ReviewForm = ({ className, productId }: ReviewFormProps) => {
   const editorRef = useRef<MDXEditorMethods>(null)
-  const session = useSession()
   const queryClient = useQueryClient()
-  const { data: review, error } = useQuery({
-    queryKey: ['GET_PRODUCT_REVIEW_BY_AUTH_USER_AND_PRODUCT_ID', productId],
-    queryFn: async () =>
-      await getProductReviewByAuthUserAndProductId(productId),
-    enabled: !!session.data,
+  const { data: review } = useGetProductReviewByAuthUserAndProductQuery({
+    productId,
   })
+  const createReviewMutation = useCreateProductReviewMutationQuery()
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,7 +73,6 @@ export const ReviewForm = ({ className, productId }: ReviewFormProps) => {
     },
   })
   const { resolvedTheme } = useTheme()
-  const createReviewMutation = useMutation({ mutationFn: createProductReview })
 
   useEffect(() => {
     form.setValue('star', review?.star || 0)
@@ -104,7 +99,7 @@ export const ReviewForm = ({ className, productId }: ReviewFormProps) => {
           toast.success('Review has been saved')
         },
         onError: (err) => {
-          restErrorMessages(err).forEach((message) => {
+          errorMessages(err).forEach((message) => {
             toast.error(message)
           })
         },

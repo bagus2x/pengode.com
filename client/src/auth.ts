@@ -5,12 +5,8 @@ import GitHub from 'next-auth/providers/github'
 import Google from 'next-auth/providers/google'
 import { jwtDecode } from 'jwt-decode'
 
-import {
-  signIn as credentialSignIn,
-  github,
-  google,
-  refreshTokens,
-} from '@pengode/data/auth'
+import { Auth } from '@pengode/data/auth/auth'
+import { github, google, refreshTokens } from '@pengode/data/auth/auth-api'
 
 declare module 'next-auth' {
   interface Session {
@@ -42,24 +38,18 @@ export const authConfig: NextAuthConfig = {
       clientSecret: process.env.GOOGLE_SECRET,
     }),
     Credentials({
-      credentials: {
-        username: { label: 'Username', type: 'text' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize({ username, password }) {
-        const res = await credentialSignIn({
-          username: username as string,
-          password: password as string,
-        })
+      credentials: { data: { type: 'input' } },
+      async authorize({ data: dataStr }) {
+        const data = JSON.parse(dataStr as string) as Auth
 
         return {
-          id: `${res.user.id}`,
-          email: res.user.email,
-          name: res.user.name,
-          image: res.user.photo,
-          roles: res.user.roles,
-          accessToken: res.accessToken,
-          refreshToken: res.refreshToken,
+          id: `${data.user.id}`,
+          email: data.user.email,
+          name: data.user.name,
+          image: data.user.photo,
+          roles: data.user.roles,
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
         }
       },
     }),
@@ -98,9 +88,10 @@ export const authConfig: NextAuthConfig = {
       const refreshToken = token.refreshToken as string
       const exp = jwtDecode(accessToken).exp
       if (exp && Date.now() / 1000 > exp) {
-        const res = await refreshTokens({ token: refreshToken })
-        token.accessToken = res.accessToken
-        token.refreshToken = res.refreshToken
+        // Infinite Loop
+        // const res = await refreshTokens({ token: refreshToken })
+        // token.accessToken = res.accessToken
+        // token.refreshToken = res.refreshToken
       }
 
       return token

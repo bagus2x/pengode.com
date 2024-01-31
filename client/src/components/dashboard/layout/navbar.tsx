@@ -10,7 +10,7 @@ import {
   SunIcon,
   UserIcon,
 } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useTheme } from 'next-themes'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -38,7 +38,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@pengode/components/ui/dropdown-menu'
-import { signOut } from '@pengode/data/auth'
 
 export function Navbar({ className }: PropsWithClassName) {
   const session = useSession()
@@ -58,10 +57,6 @@ export function Navbar({ className }: PropsWithClassName) {
     document.addEventListener('keydown', down)
     return () => document.removeEventListener('keydown', down)
   }, [session])
-
-  const handleSignOut = async () => {
-    await signOut()
-  }
 
   return (
     <nav className={cn('mx-auto w-full max-w-screen-xl', className)}>
@@ -138,7 +133,7 @@ export function Navbar({ className }: PropsWithClassName) {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem onClick={() => signOut()}>
               <LogOutIcon className='me-2 h-4 w-4' />
               <span>Log out</span>
               <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>

@@ -2,7 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
@@ -12,6 +12,7 @@ import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { Button } from '@pengode/components/ui/button'
@@ -32,7 +33,7 @@ import {
   FormMessage,
 } from '@pengode/components/ui/form'
 import { Input } from '@pengode/components/ui/input'
-import { createLog } from '@pengode/data/product-log'
+import { useCreateProductLogMutation } from '@pengode/data/product-log/product-log-hook'
 
 const Editor = dynamic(
   () =>
@@ -82,14 +83,14 @@ export const NewLogDialog = ({
     },
   })
   const queryClient = useQueryClient()
-  const createLogMutation = useMutation({ mutationFn: createLog })
+  const createProductLogMutation = useCreateProductLogMutation()
   const { resolvedTheme } = useTheme()
   const editorRef = useRef<MDXEditorMethods>(null)
 
   const handleSubmit = (req: z.infer<typeof formSchema>) => {
     if (!productId) return
 
-    createLogMutation.mutate(
+    createProductLogMutation.mutate(
       { ...req, productId },
       {
         onSuccess: async () => {
@@ -99,7 +100,7 @@ export const NewLogDialog = ({
           setOpen(false)
         },
         onError: (err) => {
-          err.message.split(', ').forEach((message) => {
+          errorMessages(err).forEach((message) => {
             toast.error(message)
           })
         },

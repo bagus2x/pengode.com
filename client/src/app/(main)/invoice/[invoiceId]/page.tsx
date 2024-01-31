@@ -1,5 +1,5 @@
 import { InvoiceDetail } from '@pengode/components/main/invoice/invoice-detail'
-import { getInvoice, getInvoices } from '@pengode/data/product-invoice'
+import { getInvoice } from '@pengode/data/product-invoice/product-invoice-api'
 
 type InvoiceDetailProps = {
   params: {

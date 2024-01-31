@@ -63,7 +63,7 @@ export class ArticleService {
 
         const article = await articleRepository.save({
           title: req.title,
-          thumbnail: req.thumbnail,
+          thumbnail: req.thumbnailUrl,
           body: req.body,
           summary: req.summary,
           readingTime: req.readingTime,
@@ -145,7 +145,7 @@ export class ArticleService {
 
         const article = await articleRepository.findOneBy({ id: articleId })
         article.title = req.title
-        article.thumbnail = req.thumbnail
+        article.thumbnailUrl = req.thumbnailUrl
         article.body = req.body
         article.summary = req.summary
         article.readingTime = req.readingTime

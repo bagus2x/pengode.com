@@ -18,6 +18,9 @@ async function bootstrap() {
   )
   app.setGlobalPrefix('/api/v1')
 
+  // Cors
+  app.enableCors()
+
   // Logger
   app.useLogger(app.get(Logger))
 

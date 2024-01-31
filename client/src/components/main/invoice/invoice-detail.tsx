@@ -1,14 +1,17 @@
 'use client'
 
-import { useQuery } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import Decimal from 'decimal.js'
 import { CopyIcon } from 'lucide-react'
 import Image from 'next/image'
+import { notFound } from 'next/navigation'
+import { toast } from 'sonner'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { RupiahFormatter, avatar } from '@pengode/common/utils'
+import { PaymentCounter } from '@pengode/components/main/invoice/payment-counter'
+import { PaymentDrawer } from '@pengode/components/main/invoice/payment-drawer'
 import { Badge } from '@pengode/components/ui/badge'
 import { Button } from '@pengode/components/ui/button'
 import {
@@ -27,11 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from '@pengode/components/ui/table'
-import { ProductInvoice, getInvoice } from '@pengode/data/product-invoice'
-import { notFound } from 'next/navigation'
-import { PaymentDrawer } from '@pengode/components/main/invoice/payment-drawer'
-import { toast } from 'sonner'
-import { PaymentCounter } from '@pengode/components/main/invoice/payment-counter'
+import { ProductInvoice } from '@pengode/data/product-invoice/product-invoice'
+import { useGetInvoiceQuery } from '@pengode/data/product-invoice/product-invoice-hook'
 
 export type InvoiceInfoProps = PropsWithClassName & {
   invoice: ProductInvoice
@@ -41,9 +41,8 @@ export const InvoiceDetail = ({
   className,
   invoice: initialInvoice,
 }: InvoiceInfoProps) => {
-  const { data: invoice } = useQuery({
-    queryKey: ['GET_INVOICE', initialInvoice.id],
-    queryFn: async () => await getInvoice(initialInvoice.id),
+  const { data: invoice } = useGetInvoiceQuery({
+    invoiceId: initialInvoice.id,
     initialData: initialInvoice,
   })
 

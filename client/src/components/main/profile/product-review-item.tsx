@@ -4,8 +4,8 @@ import ReactMarkdown from 'react-markdown'
 
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
-import { ProductReview } from '@pengode/data/product-review'
 import { RatingBar } from '@pengode/components/ui/rating-bar'
+import { ProductReview } from '@pengode/data/product-review/product-review'
 
 export type ProductReviewItemProps = PropsWithClassName & {
   review: ProductReview

@@ -2,17 +2,17 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
-import { useMutation, useQuery } from '@tanstack/react-query'
 import { Loader2Icon } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import dynamic from 'next/dynamic'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { forwardRef, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { mergeRefs } from 'react-merge-refs'
 import { toast } from 'sonner'
 import * as z from 'zod'
 
-import { restErrorMessages } from '@pengode/common/rest-client'
+import { errorMessages } from '@pengode/common/axios'
 import { cn } from '@pengode/common/tailwind'
 import { PropsWithClassName } from '@pengode/common/types'
 import { NewCategoryDialog } from '@pengode/components/dashboard/article/new-category-dialog'
@@ -38,10 +38,11 @@ import {
 import { ImageUploader } from '@pengode/components/ui/image-uploader'
 import { Input } from '@pengode/components/ui/input'
 import { Textarea } from '@pengode/components/ui/textarea'
-import { createArticle, getArticle, updateArticle } from '@pengode/data/article'
-import { getCategories } from '@pengode/data/article-category'
-import { upload } from '@pengode/data/cloudinary'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useGetArticleCategoriesQuery } from '@pengode/data/article-category/article-category-hook'
+import {
+  useGetArticleQuery,
+  useUpsertArticleMutation,
+} from '@pengode/data/article/article-hook'
 
 const Editor = dynamic(
   () =>
@@ -83,7 +84,7 @@ const formSchema = z.object({
       message: 'Summary must be less than 511 characters.',
     }),
   readingTime: z.number().optional(),
-  thumbnail: z.instanceof(File).or(z.string()).nullable(),
+  thumbnail: z.instanceof(File).or(z.string()),
   categoryIds: z
     .array(z.number().gt(0))
     .min(0, { message: 'Choose at least one category' }),
@@ -97,14 +98,10 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
   const searchParams = useSearchParams()
   const articleId = searchParams.get('id')
     ? parseInt(searchParams.get('id')!)
-    : null
+    : undefined
   const editMode = !!articleId
-  const { data: article, ...getArticleQuery } = useQuery({
-    queryKey: ['GET_ARTICLE', articleId],
-    queryFn: async () => {
-      if (articleId) return await getArticle(articleId)
-    },
-    enabled: editMode,
+  const { data: article, ...getArticleQuery } = useGetArticleQuery({
+    articleId,
   })
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -112,44 +109,14 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
       title: '',
       summary: '',
       readingTime: 0,
-      thumbnail: null,
+      thumbnail: '',
       body: '',
       categoryIds: [],
     },
   })
   const { resolvedTheme } = useTheme()
-  const { data: categories } = useQuery({
-    queryKey: ['GET_ARTICLE_CATEGORIES'],
-    queryFn: async () => await getCategories({ size: 100 }),
-  })
-  const createArticleMutation = useMutation({
-    mutationFn: async ({ thumbnail, ...req }: z.infer<typeof formSchema>) => {
-      if (thumbnail instanceof File) {
-        const formData = new FormData()
-        formData.append('file', thumbnail)
-        const result = await upload(formData)
-
-        if (editMode && articleId) {
-          return await updateArticle(articleId, {
-            ...req,
-            thumbnail: result['secure_url'],
-          })
-        } else {
-          return await createArticle({
-            ...req,
-            thumbnail: result['secure_url'],
-          })
-        }
-      }
-
-      if (editMode && articleId) {
-        return await updateArticle(articleId, { ...req, thumbnail })
-      }
-
-      return await createArticle(req)
-    },
-    mutationKey: ['CREATE_OR_UPDATE_ARTICLE', editMode],
-  })
+  const { data: articleCategoryPages } = useGetArticleCategoriesQuery()
+  const upsertArticleMutation = useUpsertArticleMutation({ articleId })
   const router = useRouter()
   const blockUi = useBlockUi()
 
@@ -162,6 +129,9 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
   useEffect(() => {
     if (getArticleQuery.isLoading) blockUi.block()
     else blockUi.unblock()
+
+    return blockUi.unblock
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [getArticleQuery.isLoading])
 
@@ -174,21 +144,21 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
       form.setValue('body', article.body)
       const categoryIds = article.categories.map((category) => category.id)
       form.setValue('categoryIds', categoryIds)
-      form.setValue('thumbnail', article.thumbnail || null)
+      form.setValue('thumbnail', article.thumbnail || '')
       editorRef.current?.setMarkdown(article.body)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, getArticleQuery.isFetched, editorRef])
 
   const handleSave = (req: z.infer<typeof formSchema>) => {
-    createArticleMutation.mutate(req, {
+    upsertArticleMutation.mutate(req, {
       onSuccess: () => {
         getArticleQuery.refetch()
         toast.success('Articles successfully saved')
         router.replace('/dashboard/article')
       },
       onError: (err) => {
-        restErrorMessages(err).forEach((message) => {
+        errorMessages(err).forEach((message) => {
           toast.error(message)
         })
       },
@@ -269,10 +239,14 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
                     <FormControl>
                       <MultiSelect
                         options={
-                          categories?.items?.map((category) => ({
-                            label: category.name,
-                            value: `${category.id}`,
-                          })) || []
+                          articleCategoryPages?.pages
+                            .map((page) =>
+                              page.items?.map((category) => ({
+                                label: category.name,
+                                value: `${category.id}`,
+                              })),
+                            )
+                            .flat() || []
                         }
                         values={new Set(field.value.map((v) => `${v}`))}
                         onChange={(values) => {
@@ -310,8 +284,8 @@ export const ArticleForm = ({ className }: PropsWithClassName) => {
               <Button
                 type='submit'
                 size='sm'
-                disabled={createArticleMutation.isPending}>
-                {createArticleMutation.isPending && (
+                disabled={upsertArticleMutation.isPending}>
+                {upsertArticleMutation.isPending && (
                   <Loader2Icon className='me-2 h-4 w-4 animate-spin' />
                 )}
                 Save

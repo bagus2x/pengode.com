@@ -10,11 +10,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@pengode/components/ui/tabs'
-import { getAuthUser } from '@pengode/data/user'
 import { BoughtProductList } from '@pengode/components/main/profile/bought-product-list'
 import { LikedProductList } from '@pengode/components/main/profile/liked-product-list'
 import { ProductReviewList } from '@pengode/components/main/profile/product-review-list'
-import { signOut } from '@pengode/data/auth'
+import { signOut } from 'next-auth/react'
+import { getAuthUser } from '@pengode/data/user/user-api'
 
 export const metadata: Metadata = {
   title: 'My profile',
@@ -22,6 +22,11 @@ export const metadata: Metadata = {
 
 export default async function ProfilePage() {
   const user = await getAuthUser()
+
+  const handleSignOut = async () => {
+    'use server'
+    await signOut()
+  }
 
   return (
     <main className='mx-auto max-w-screen-xl px-4 py-4'>
@@ -47,7 +52,7 @@ export default async function ProfilePage() {
               </h6>
               <h6 className='mb-1 text-sm'>{user.email}</h6>
               <div className='flex w-full gap-2'>
-                <form action={signOut} className='flex-1'>
+                <form action={handleSignOut} className='flex-1'>
                   <Button
                     type='submit'
                     size='sm'
