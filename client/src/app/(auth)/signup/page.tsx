@@ -7,7 +7,7 @@ import { Astronaut } from '@pengode/components/ui/astronaut'
 export default function SignUpPage() {
   return (
     <main className='flex min-h-screen'>
-      <div className='hidden flex-1 flex-col justify-between bg-primary p-8 text-primary-foreground md:flex'>
+      <div className='hidden flex-1 flex-col justify-between bg-primary p-8 text-primary-foreground dark:bg-background dark:text-foreground md:flex'>
         <Link className='flex items-center gap-4' href='/'>
           <Astronaut className='h-8 w-8 [&>*]:fill-white' />
           <div className='scroll-m-20 text-xl tracking-tight'>Pengode</div>
