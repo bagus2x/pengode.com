@@ -1,9 +1,13 @@
-import { auth } from '@pengode/auth'
 import axiosDefault, { AxiosError } from 'axios'
+import { Session } from 'next-auth'
 import { getSession } from 'next-auth/react'
+
+import { auth } from '@pengode/auth'
 
 export const axiosWithAuth = () => {
   const instance = axiosDefault.create()
+
+  let session: Session | null = null
 
   instance.interceptors.request.use(async (request) => {
     let token: string | undefined
@@ -11,7 +15,7 @@ export const axiosWithAuth = () => {
       const session = await auth()
       token = session?.user.accessToken
     } else {
-      const session = await getSession()
+      if (!session) session = await getSession()
 
       token = session?.user.accessToken
     }
