@@ -1,8 +1,13 @@
 import { SettingsIcon } from 'lucide-react'
 import { Metadata } from 'next'
+import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 
 import { avatar } from '@pengode/common/utils'
+import { BoughtProductList } from '@pengode/components/main/profile/bought-product-list'
+import { ProductInvoiceList } from '@pengode/components/main/profile/invoice-list'
+import { LikedProductList } from '@pengode/components/main/profile/liked-product-list'
+import { ProductReviewList } from '@pengode/components/main/profile/product-review-list'
 import { Button } from '@pengode/components/ui/button'
 import {
   Tabs,
@@ -10,10 +15,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@pengode/components/ui/tabs'
-import { BoughtProductList } from '@pengode/components/main/profile/bought-product-list'
-import { LikedProductList } from '@pengode/components/main/profile/liked-product-list'
-import { ProductReviewList } from '@pengode/components/main/profile/product-review-list'
-import { signOut } from 'next-auth/react'
 import { getAuthUser } from '@pengode/data/user/user-api'
 
 export const metadata: Metadata = {
@@ -84,7 +85,9 @@ export default async function ProfilePage() {
             <TabsContent value='likes'>
               <LikedProductList />
             </TabsContent>
-            <TabsContent value='invoices'>Coming Soon</TabsContent>
+            <TabsContent value='invoices'>
+              <ProductInvoiceList />
+            </TabsContent>
             <TabsContent value='reviews'>
               <ProductReviewList />
             </TabsContent>

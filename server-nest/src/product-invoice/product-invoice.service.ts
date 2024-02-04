@@ -198,6 +198,32 @@ export class ProductInvoiceService {
     }
   }
 
+  async findByAuthUser(
+    req: FindAllRequest,
+  ): Promise<PageResponse<InvoiceResponse>> {
+    const products = await this.productInvoiceRepository.find({
+      where: {
+        id: req.previousCursor
+          ? MoreThan(req.previousCursor)
+          : LessThan(req.nextCursor),
+        status: req.statuses ? In(req.statuses) : undefined,
+        customer: {
+          id: this.clsService.get<number>('userId') || 0,
+        },
+      },
+      take: req.size,
+      order: {
+        id: 'DESC',
+      },
+    })
+
+    return {
+      items: products.map(InvoiceResponse.create),
+      previousCursor: products[0]?.id || 0,
+      nextCursor: products[products.length - 1]?.id || 0,
+    }
+  }
+
   async findById(invoiceId: number): Promise<InvoiceResponse> {
     const invoice = await this.productInvoiceRepository.findOne({
       where: { id: invoiceId },

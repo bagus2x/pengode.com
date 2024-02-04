@@ -31,6 +31,24 @@ export const getInvoices = async (req?: {
   return res.data
 }
 
+export const getInvoicesByAuthUser = async (req?: {
+  cursor?: Cursor
+  size?: number
+  search?: string
+}) => {
+  const url = new URL(`${BASE_URL}/user/product-invoices`)
+  if (req?.cursor?.nextCursor)
+    url.searchParams.append('nextCursor', `${req.cursor?.nextCursor}`)
+  if (req?.cursor?.previousCursor)
+    url.searchParams.append('previousCursor', `${req.cursor?.previousCursor}`)
+  if (req?.size) url.searchParams.append('size', `${req.size}`)
+  if (req?.search) url.searchParams.append('search', req.search)
+
+  const res = await axios.auth.get<Page<ProductInvoice>>(url.toString())
+
+  return res.data
+}
+
 export const getInvoice = cache(async (invoiceId: number) => {
   const url = `${BASE_URL}/product-invoice/${invoiceId}`
   const res = await axios.auth.get<ProductInvoice>(url)
